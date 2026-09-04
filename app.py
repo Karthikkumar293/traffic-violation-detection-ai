@@ -1,971 +1,420 @@
 import os
-import base64
-import cv2
-import numpy as np
+import uuid
+from pathlib import Path
 
 from flask import Flask, request, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 from ultralytics import YOLO
-
 
 # ============================================================
 # TRAFFICGUARD AI
-# Flask Backend
+# Flask + YOLO Backend
 # ============================================================
 
-app = Flask(__name__, static_folder=".", static_url_path="")
+app = Flask(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "models")
+# ------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------
 
+BASE_DIR = Path(__file__).resolve().parent
 
-# ============================================================
-# MODEL PATHS
-# ============================================================
+UPLOAD_FOLDER = BASE_DIR / "uploads"
+RESULT_FOLDER = BASE_DIR / "results"
 
-MAIN_MODEL_PATH = os.path.join(
-    MODEL_DIR,
-    "main_25class_best.pt"
-)
+UPLOAD_FOLDER.mkdir(exist_ok=True)
+RESULT_FOLDER.mkdir(exist_ok=True)
 
-HELMET_MODEL_PATH = os.path.join(
-    MODEL_DIR,
-    "helmet_balanced_best.pt"
-)
+app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)
+app.config["RESULT_FOLDER"] = str(RESULT_FOLDER)
 
-# Optional plate model
-PLATE_MODEL_PATH = os.path.join(
-    MODEL_DIR,
-    "plate_best.pt"
-)
-
-
-# ============================================================
-# CONFIDENCE SETTINGS
-# ============================================================
-
-DETECTION_CONFIDENCE = 0.40
-HUMAN_REVIEW_THRESHOLD = 0.60
-
-
-# ============================================================
-# FOUR MAIN VIOLATIONS
-#
-# Based on your model logic:
-#
-# 3 = Triple Riding
-# 4 = Phone While Driving
-# 9 = Seatbelt Violation
-#
-# No Helmet is handled by the separate helmet model.
-# ============================================================
-
-TRIPLE_RIDING_ID = 3
-PHONE_VIOLATION_ID = 4
-SEATBELT_VIOLATION_ID = 9
-
-VIOLATION_NAMES = {
-    TRIPLE_RIDING_ID: "Triple Riding",
-    PHONE_VIOLATION_ID: "Phone While Driving",
-    SEATBELT_VIOLATION_ID: "Seatbelt Violation",
+ALLOWED_EXTENSIONS = {
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+    "bmp",
+    "mp4",
+    "avi",
+    "mov",
+    "mkv",
 }
 
+# ------------------------------------------------------------
+# Model paths
+# ------------------------------------------------------------
 
-# ============================================================
-# LOAD MODELS
-# ============================================================
+MAIN_MODEL_PATH = BASE_DIR / "main_25class_best.pt"
+HELMET_MODEL_PATH = BASE_DIR / "helmet_balanced_best.pt"
 
-main_model = None
-helmet_model = None
-plate_model = None
+print("=" * 70)
+print("TRAFFICGUARD AI - MODEL LOADING")
+print("=" * 70)
 
+print("Main model:")
+print(MAIN_MODEL_PATH)
+print("Exists:", MAIN_MODEL_PATH.exists())
 
-def load_models():
+print("\nHelmet model:")
+print(HELMET_MODEL_PATH)
+print("Exists:", HELMET_MODEL_PATH.exists())
 
-    global main_model
-    global helmet_model
-    global plate_model
+# ------------------------------------------------------------
+# Load models
+# ------------------------------------------------------------
 
-    print("=" * 70)
-    print("TRAFFICGUARD AI - MODEL INITIALIZATION")
-    print("=" * 70)
-
-    # ----------------------------
-    # Main 25-class model
-    # ----------------------------
-
-    if os.path.isfile(MAIN_MODEL_PATH):
-
-        try:
-            main_model = YOLO(MAIN_MODEL_PATH)
-
-            print(
-                "25-Class YOLO Model: READY"
-            )
-            print(
-                MAIN_MODEL_PATH
-            )
-
-        except Exception as e:
-
-            print(
-                "25-Class Model Load Error:",
-                e
-            )
-
-    else:
-
-        print(
-            "25-Class Model NOT FOUND:"
-        )
-        print(
-            MAIN_MODEL_PATH
-        )
-
-    # ----------------------------
-    # Helmet model
-    # ----------------------------
-
-    if os.path.isfile(HELMET_MODEL_PATH):
-
-        try:
-            helmet_model = YOLO(
-                HELMET_MODEL_PATH
-            )
-
-            print(
-                "Helmet Model: READY"
-            )
-            print(
-                HELMET_MODEL_PATH
-            )
-
-        except Exception as e:
-
-            print(
-                "Helmet Model Load Error:",
-                e
-            )
-
-    else:
-
-        print(
-            "Helmet Model NOT FOUND:"
-        )
-        print(
-            HELMET_MODEL_PATH
-        )
-
-    # ----------------------------
-    # Plate model
-    # ----------------------------
-
-    if os.path.isfile(PLATE_MODEL_PATH):
-
-        try:
-
-            plate_model = YOLO(
-                PLATE_MODEL_PATH
-            )
-
-            print(
-                "Plate Model: READY"
-            )
-
-        except Exception as e:
-
-            print(
-                "Plate Model Load Error:",
-                e
-            )
-
-    else:
-
-        print(
-            "Plate Model: NOT AVAILABLE"
-        )
-
-    print("=" * 70)
-
-
-load_models()
-
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def confidence_percent(value):
-
-    value = float(value)
-
-    if value <= 1:
-        value *= 100
-
-    return round(value, 2)
-
-
-def violation_name(value):
-
-    return (
-        str(value)
-        .replace("_", " ")
-        .title()
+if not MAIN_MODEL_PATH.exists():
+    raise FileNotFoundError(
+        f"Main model not found: {MAIN_MODEL_PATH}"
     )
 
-
-def image_to_base64(image):
-
-    success, buffer = cv2.imencode(
-        ".jpg",
-        image
+if not HELMET_MODEL_PATH.exists():
+    raise FileNotFoundError(
+        f"Helmet model not found: {HELMET_MODEL_PATH}"
     )
 
-    if not success:
-        return None
+print("\nLoading 25-class model...")
+main_model = YOLO(str(MAIN_MODEL_PATH))
+print("✅ 25-class model loaded")
 
-    return base64.b64encode(
-        buffer.tobytes()
-    ).decode("utf-8")
+print("\nLoading helmet model...")
+helmet_model = YOLO(str(HELMET_MODEL_PATH))
+print("✅ Helmet model loaded")
+
+print("\n🎉 BOTH MODELS ARE READY")
+print("=" * 70)
 
 
 # ============================================================
-# MAIN MODEL ANALYSIS
+# Helper functions
 # ============================================================
 
-def analyze_main_model(image):
+def allowed_file(filename):
+    """Check whether the uploaded file has an allowed extension."""
+    if not filename:
+        return False
 
-    violations = []
+    extension = filename.rsplit(".", 1)[-1].lower()
 
-    if main_model is None:
+    return extension in ALLOWED_EXTENSIONS
 
-        return violations
 
-    results = main_model.predict(
-        source=image,
-        conf=0.10,
-        iou=0.50,
-        imgsz=640,
-        max_det=100,
-        verbose=False
-    )
+def convert_detections(result):
+    """
+    Convert Ultralytics detection result into JSON-safe data.
+    """
 
-    result = results[0]
+    detections = []
 
     if result.boxes is None:
-
-        return violations
+        return detections
 
     for box in result.boxes:
 
-        class_id = int(
-            box.cls[0].item()
+        class_id = int(box.cls[0].item())
+        confidence = float(box.conf[0].item())
+
+        # Get class name safely
+        class_name = result.names.get(
+            class_id,
+            str(class_id)
         )
 
-        confidence = float(
-            box.conf[0].item()
-        )
+        coordinates = box.xyxy[0].tolist()
 
-        x1, y1, x2, y2 = (
-            box.xyxy[0]
-            .cpu()
-            .numpy()
-            .astype(int)
-        )
-
-        if class_id in VIOLATION_NAMES:
-
-            violations.append({
-
-                "type":
-                    VIOLATION_NAMES[class_id],
-
-                "confidence":
-                    confidence,
-
-                "box": [
-                    int(x1),
-                    int(y1),
-                    int(x2),
-                    int(y2)
-                ]
-
-            })
-
-    return violations
-
-
-# ============================================================
-# HELMET MODEL ANALYSIS
-# ============================================================
-
-def analyze_helmet_model(image):
-
-    violations = []
-
-    if helmet_model is None:
-
-        return violations
-
-    results = helmet_model.predict(
-        source=image,
-        conf=0.10,
-        iou=0.50,
-        imgsz=640,
-        max_det=100,
-        verbose=False
-    )
-
-    result = results[0]
-
-    if result.boxes is None:
-
-        return violations
-
-    for box in result.boxes:
-
-        class_id = int(
-            box.cls[0].item()
-        )
-
-        confidence = float(
-            box.conf[0].item()
-        )
-
-        x1, y1, x2, y2 = (
-            box.xyxy[0]
-            .cpu()
-            .numpy()
-            .astype(int)
-        )
-
-        # According to your model logic:
-        # class 1 = WITHOUT HELMET
-
-        if class_id == 1:
-
-            violations.append({
-
-                "type":
-                    "No Helmet",
-
-                "confidence":
-                    confidence,
-
-                "box": [
-                    int(x1),
-                    int(y1),
-                    int(x2),
-                    int(y2)
-                ]
-
-            })
-
-    return violations
-
-
-# ============================================================
-# DRAW DETECTIONS
-# ============================================================
-
-def draw_detections(
-    image,
-    violations
-):
-
-    output = image.copy()
-
-    for violation in violations:
-
-        box = violation["box"]
-
-        x1, y1, x2, y2 = box
-
-        confidence = confidence_percent(
-            violation["confidence"]
-        )
-
-        label = (
-            f"{violation['type']} "
-            f"{confidence:.1f}%"
-        )
-
-        cv2.rectangle(
-            output,
-            (x1, y1),
-            (x2, y2),
-            (0, 165, 255),
-            2
-        )
-
-        (
-            text_width,
-            text_height
-        ), baseline = cv2.getTextSize(
-            label,
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            2
-        )
-
-        text_y = max(
-            y1 - 10,
-            text_height + 5
-        )
-
-        cv2.rectangle(
-            output,
-            (
-                x1,
-                text_y - text_height - 8
+        detections.append({
+            "class_id": class_id,
+            "class_name": class_name,
+            "confidence": round(confidence, 4),
+            "confidence_percent": round(
+                confidence * 100,
+                2
             ),
-            (
-                x1 + text_width + 8,
-                text_y + baseline
-            ),
-            (0, 165, 255),
-            -1
-        )
-
-        cv2.putText(
-            output,
-            label,
-            (
-                x1 + 4,
-                text_y
-            ),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            (255, 255, 255),
-            2,
-            cv2.LINE_AA
-        )
-
-    return output
-
-
-# ============================================================
-# PLATE DETECTION
-# ============================================================
-
-def analyze_plate(image):
-
-    if plate_model is None:
-
-        return {
-
-            "plate_text": None,
-
-            "plate_confidence": None,
-
-            "ocr_confidence": None
-
-        }
-
-    try:
-
-        results = plate_model.predict(
-            source=image,
-            conf=0.25,
-            iou=0.50,
-            imgsz=640,
-            max_det=20,
-            verbose=False
-        )
-
-        result = results[0]
-
-        if (
-            result.boxes is None
-            or len(result.boxes) == 0
-        ):
-
-            return {
-
-                "plate_text": None,
-
-                "plate_confidence": None,
-
-                "ocr_confidence": None
-
+            "bbox": {
+                "x1": round(coordinates[0], 2),
+                "y1": round(coordinates[1], 2),
+                "x2": round(coordinates[2], 2),
+                "y2": round(coordinates[3], 2),
             }
+        })
 
-        # Select highest-confidence plate
+    return detections
 
-        best_box = None
-        best_conf = 0
 
-        for box in result.boxes:
+def save_annotated_result(result, output_path):
+    """Save YOLO annotated image/video result."""
 
-            confidence = float(
-                box.conf[0].item()
-            )
+    plotted = result.plot()
 
-            if confidence > best_conf:
+    import cv2
 
-                best_conf = confidence
-                best_box = box
-
-        if best_box is None:
-
-            return {
-
-                "plate_text": None,
-
-                "plate_confidence": None,
-
-                "ocr_confidence": None
-
-            }
-
-        x1, y1, x2, y2 = (
-            best_box.xyxy[0]
-            .cpu()
-            .numpy()
-            .astype(int)
-        )
-
-        x1 = max(0, x1)
-        y1 = max(0, y1)
-
-        x2 = min(
-            image.shape[1],
-            x2
-        )
-
-        y2 = min(
-            image.shape[0],
-            y2
-        )
-
-        plate_crop = image[
-            y1:y2,
-            x1:x2
-        ]
-
-        if plate_crop.size == 0:
-
-            return {
-
-                "plate_text": None,
-
-                "plate_confidence":
-                    best_conf,
-
-                "ocr_confidence": None
-
-            }
-
-        # ------------------------------------------------
-        # OCR
-        #
-        # PaddleOCR can be connected here.
-        # The backend intentionally does not crash
-        # when OCR is unavailable.
-        # ------------------------------------------------
-
-        plate_text = None
-        ocr_confidence = None
-
-        try:
-
-            from paddleocr import PaddleOCR
-
-            ocr = PaddleOCR(
-                use_angle_cls=True,
-                lang="en",
-                show_log=False
-            )
-
-            ocr_result = ocr.ocr(
-                plate_crop,
-                cls=True
-            )
-
-            if (
-                ocr_result
-                and ocr_result[0]
-            ):
-
-                texts = []
-
-                scores = []
-
-                for item in ocr_result[0]:
-
-                    if len(item) >= 2:
-
-                        text_data = item[1]
-
-                        if (
-                            isinstance(
-                                text_data,
-                                (list, tuple)
-                            )
-                            and len(text_data) >= 2
-                        ):
-
-                            text = str(
-                                text_data[0]
-                            )
-
-                            score = float(
-                                text_data[1]
-                            )
-
-                            texts.append(text)
-                            scores.append(score)
-
-                if texts:
-
-                    plate_text = "".join(
-                        texts
-                    )
-
-                    if scores:
-
-                        ocr_confidence = (
-                            sum(scores)
-                            / len(scores)
-                        )
-
-        except Exception as ocr_error:
-
-            print(
-                "OCR unavailable:",
-                ocr_error
-            )
-
-        return {
-
-            "plate_text":
-                plate_text,
-
-            "plate_confidence":
-                best_conf,
-
-            "ocr_confidence":
-                ocr_confidence
-
-        }
-
-    except Exception as e:
-
-        print(
-            "Plate analysis error:",
-            e
-        )
-
-        return {
-
-            "plate_text": None,
-
-            "plate_confidence": None,
-
-            "ocr_confidence": None
-
-        }
-
-
-# ============================================================
-# DECISION ENGINE
-# ============================================================
-
-def make_decision(
-    violations
-):
-
-    if not violations:
-
-        return (
-            "NOT_DETECTED",
-            0.0
-        )
-
-    confidences = [
-
-        float(v["confidence"])
-
-        for v in violations
-
-    ]
-
-    overall = max(
-        confidences
-    )
-
-    if overall < HUMAN_REVIEW_THRESHOLD:
-
-        return (
-            "HUMAN_REVIEW",
-            overall
-        )
-
-    return (
-        "DETECTED",
-        overall
+    cv2.imwrite(
+        str(output_path),
+        plotted
     )
 
 
 # ============================================================
-# HOME PAGE
+# Routes
 # ============================================================
 
 @app.route("/")
 def home():
+    """Serve the TrafficGuard AI frontend."""
 
     return send_from_directory(
-        BASE_DIR,
+        str(BASE_DIR),
         "index.html"
     )
 
 
-# ============================================================
-# HEALTH API
-# ============================================================
-
-@app.route(
-    "/api/health",
-    methods=["GET"]
-)
+@app.route("/health")
 def health():
+    """Health check endpoint for Render."""
 
     return jsonify({
-
         "status": "online",
-
-        "main_model":
-            main_model is not None,
-
-        "helmet_model":
-            helmet_model is not None,
-
-        "plate_model":
-            plate_model is not None,
-
-        "ocr": True
-
+        "service": "TrafficGuard AI",
+        "main_model": MAIN_MODEL_PATH.exists(),
+        "helmet_model": HELMET_MODEL_PATH.exists()
     })
 
 
 # ============================================================
-# ANALYSIS API
+# Image Analysis API
 # ============================================================
 
-@app.route(
-    "/api/analyze",
-    methods=["POST"]
-)
+@app.route("/api/analyze", methods=["POST"])
 def analyze():
-
-    if "image" not in request.files:
-
-        return jsonify({
-
-            "error":
-                "No image uploaded."
-
-        }), 400
-
-    uploaded_file = request.files[
-        "image"
-    ]
-
-    if uploaded_file.filename == "":
-
-        return jsonify({
-
-            "error":
-                "No image selected."
-
-        }), 400
 
     try:
 
-        file_bytes = (
-            uploaded_file
-            .read()
-        )
+        # ----------------------------------------------------
+        # Check upload
+        # ----------------------------------------------------
 
-        image_array = np.frombuffer(
-            file_bytes,
-            np.uint8
-        )
-
-        image = cv2.imdecode(
-            image_array,
-            cv2.IMREAD_COLOR
-        )
-
-        if image is None:
+        if "file" not in request.files:
 
             return jsonify({
-
-                "error":
-                    "Invalid image file."
-
+                "success": False,
+                "error": "No file uploaded."
             }), 400
 
-        # ====================================================
-        # STEP 1 — MAIN 25-CLASS YOLO
-        # ====================================================
+        file = request.files["file"]
 
-        main_violations = (
-            analyze_main_model(
-                image
-            )
+        if file.filename == "":
+
+            return jsonify({
+                "success": False,
+                "error": "No file selected."
+            }), 400
+
+        if not allowed_file(file.filename):
+
+            return jsonify({
+                "success": False,
+                "error": "Unsupported file type."
+            }), 400
+
+        # ----------------------------------------------------
+        # Save uploaded file
+        # ----------------------------------------------------
+
+        original_name = secure_filename(
+            file.filename
         )
 
-        # ====================================================
-        # STEP 2 — HELMET MODEL
-        # ====================================================
-
-        helmet_violations = (
-            analyze_helmet_model(
-                image
-            )
+        unique_name = (
+            uuid.uuid4().hex
+            + "_"
+            + original_name
         )
 
-        # Combine violation results
-
-        violations = (
-            main_violations
-            +
-            helmet_violations
+        input_path = (
+            UPLOAD_FOLDER
+            / unique_name
         )
 
-        # ====================================================
-        # HELMET STATUS
-        # ====================================================
+        file.save(str(input_path))
 
-        if helmet_violations:
+        print("\n" + "=" * 70)
+        print("NEW ANALYSIS")
+        print("=" * 70)
+        print("File:", original_name)
 
-            helmet_status = (
-                "No Helmet"
-            )
+        # ----------------------------------------------------
+        # Run 25-class model
+        # ----------------------------------------------------
 
-        elif helmet_model is not None:
+        print("Running 25-class model...")
 
-            helmet_status = (
-                "Helmet Detected"
-            )
-
-        else:
-
-            helmet_status = (
-                "Unavailable"
-            )
-
-        # ====================================================
-        # STEP 3 — NUMBER PLATE + OCR
-        # ====================================================
-
-        plate_data = analyze_plate(
-            image
+        main_results = main_model.predict(
+            source=str(input_path),
+            conf=0.25,
+            imgsz=640,
+            verbose=False
         )
 
-        # ====================================================
-        # STEP 4 — DECISION
-        # ====================================================
+        # ----------------------------------------------------
+        # Run helmet model
+        # ----------------------------------------------------
 
-        decision, overall_confidence = (
-            make_decision(
-                violations
-            )
+        print("Running helmet model...")
+
+        helmet_results = helmet_model.predict(
+            source=str(input_path),
+            conf=0.25,
+            imgsz=640,
+            verbose=False
         )
 
-        # ====================================================
-        # DRAW RESULT
-        # ====================================================
+        # ----------------------------------------------------
+        # Convert results
+        # ----------------------------------------------------
 
-        annotated_image = (
-            draw_detections(
-                image,
-                violations
+        main_detections = []
+
+        for result in main_results:
+            main_detections.extend(
+                convert_detections(result)
             )
+
+        helmet_detections = []
+
+        for result in helmet_results:
+            helmet_detections.extend(
+                convert_detections(result)
+            )
+
+        # ----------------------------------------------------
+        # Save annotated output
+        # ----------------------------------------------------
+
+        result_filename = (
+            Path(unique_name).stem
+            + "_result.jpg"
         )
 
-        encoded_image = (
-            image_to_base64(
-                annotated_image
-            )
+        result_path = (
+            RESULT_FOLDER
+            / result_filename
         )
 
-        # ====================================================
-        # RESPONSE
-        # ====================================================
+        if main_results:
 
-        return jsonify({
+            save_annotated_result(
+                main_results[0],
+                result_path
+            )
 
+        # ----------------------------------------------------
+        # Statistics
+        # ----------------------------------------------------
+
+        total_main = len(main_detections)
+        total_helmet = len(helmet_detections)
+
+        # Count classes
+        class_counts = {}
+
+        for detection in main_detections:
+
+            name = detection["class_name"]
+
+            class_counts[name] = (
+                class_counts.get(name, 0) + 1
+            )
+
+        # Helmet counts
+        helmet_class_counts = {}
+
+        for detection in helmet_detections:
+
+            name = detection["class_name"]
+
+            helmet_class_counts[name] = (
+                helmet_class_counts.get(name, 0) + 1
+            )
+
+        # ----------------------------------------------------
+        # Response
+        # ----------------------------------------------------
+
+        response = {
             "success": True,
 
-            "decision":
-                decision,
+            "filename": original_name,
 
-            "overall_confidence":
-                overall_confidence,
+            "result_url": (
+                "/results/"
+                + result_filename
+            ),
 
-            "violations": [
+            "summary": {
+                "total_detections": total_main,
+                "helmet_detections": total_helmet,
+            },
 
-                {
+            "class_counts": class_counts,
 
-                    "type":
-                        v["type"],
+            "helmet_class_counts":
+                helmet_class_counts,
 
-                    "confidence":
-                        v["confidence"],
+            "detections": main_detections,
 
-                    "box":
-                        v["box"]
+            "helmet_detections":
+                helmet_detections,
+        }
 
-                }
+        print("\nAnalysis completed.")
+        print("Main detections:", total_main)
+        print("Helmet detections:", total_helmet)
 
-                for v in violations
+        return jsonify(response)
 
-            ],
+    except Exception as error:
 
-            "helmet_status":
-                helmet_status,
-
-            "plate_text":
-                plate_data[
-                    "plate_text"
-                ],
-
-            "plate_confidence":
-                plate_data[
-                    "plate_confidence"
-                ],
-
-            "ocr_confidence":
-                plate_data[
-                    "ocr_confidence"
-                ],
-
-            "annotated_image":
-                encoded_image
-
-        })
-
-    except Exception as e:
-
-        print(
-            "ANALYSIS ERROR:",
-            repr(e)
-        )
+        print("\n❌ ANALYSIS ERROR")
+        print(str(error))
 
         return jsonify({
-
-            "error":
-                "AI analysis failed.",
-
-            "details":
-                str(e)
-
+            "success": False,
+            "error": str(error)
         }), 500
 
 
 # ============================================================
-# RUN
+# Serve result files
+# ============================================================
+
+@app.route("/results/<filename>")
+def serve_result(filename):
+
+    return send_from_directory(
+        str(RESULT_FOLDER),
+        filename
+    )
+
+
+# ============================================================
+# Optional upload route
+# ============================================================
+
+@app.route("/api/status")
+def status():
+
+    return jsonify({
+        "system": "TrafficGuard AI",
+        "status": "online",
+        "models": {
+            "25_class": MAIN_MODEL_PATH.exists(),
+            "helmet": HELMET_MODEL_PATH.exists()
+        }
+    })
+
+
+# ============================================================
+# Run Flask
 # ============================================================
 
 if __name__ == "__main__":
@@ -976,6 +425,12 @@ if __name__ == "__main__":
             8000
         )
     )
+
+    print("\n" + "=" * 70)
+    print("TRAFFICGUARD AI SERVER")
+    print("=" * 70)
+    print(f"Starting server on port {port}")
+    print("=" * 70)
 
     app.run(
         host="0.0.0.0",
