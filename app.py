@@ -1,10 +1,32 @@
 import os
-import re
 import base64
 from datetime import datetime
 
+# ============================================================
+# RENDER MEMORY / CPU SETTINGS
+# ============================================================
+
+# Keep CPU thread usage low on small Render instances.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
+try:
+    import torch
+
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except Exception:
+        pass
+
+except Exception:
+    torch = None
+
+
 import cv2
 import numpy as np
+
 from flask import Flask, jsonify, request, send_from_directory
 from ultralytics import YOLO
 
@@ -12,7 +34,7 @@ from ultralytics import YOLO
 # ============================================================
 # TRAFFICGUARD AI
 # Flask + YOLO Backend
-# Render Deployment Version
+# Render Optimized Version
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,16 +45,27 @@ app = Flask(
     static_url_path=""
 )
 
-# Maximum upload size: 12 MB
+# Maximum upload size
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 
 
 # ============================================================
 # MODEL PATHS
 # ============================================================
-# IMPORTANT:
-# Both models are in the SAME folder as app.py on GitHub.
-# Therefore, DO NOT use /content/ or Google Drive paths.
+#
+# Your GitHub repository contains:
+#
+# main_25class_best.pt
+# helmet_balanced_best.pt
+#
+# They are beside app.py.
+#
+# DO NOT use:
+# /content/
+# /content/drive/
+# Google Drive paths
+#
+# ============================================================
 
 MAIN_MODEL_PATH = os.path.join(
     BASE_DIR,
@@ -46,9 +79,11 @@ HELMET_MODEL_PATH = os.path.join(
 
 
 # ============================================================
-# MODEL SETTINGS
+# SETTINGS
 # ============================================================
 
+# Keep the confidence threshold low because your Colab
+# pipeline used 0.10.
 MAIN_CONF = float(
     os.getenv("MAIN_CONF", "0.10")
 )
@@ -57,13 +92,50 @@ HELMET_CONF = float(
     os.getenv("HELMET_CONF", "0.10")
 )
 
+# Cases below this confidence go to human review.
 REVIEW_THRESHOLD = float(
     os.getenv("REVIEW_THRESHOLD", "0.60")
 )
 
+# Render CPU optimization.
+# 416 is considerably lighter than the original 640 inference.
+INFERENCE_SIZE = int(
+    os.getenv("INFERENCE_SIZE", "416")
+)
+
+# Maximum detections returned by each model.
+MAX_DETECTIONS = int(
+    os.getenv("MAX_DETECTIONS", "50")
+)
+
 
 # ============================================================
-# MODEL STATUS
+# TARGET CLASSES
+# ============================================================
+
+# Main 25-class YOLO model
+#
+# 3 -> Triple Riding
+# 4 -> Phone While Driving
+# 9 -> Seatbelt Violation
+#
+TARGET_MAIN = {
+    3: "Triple Riding",
+    4: "Phone While Driving",
+    9: "Seatbelt Violation"
+}
+
+# Helmet model
+#
+# 0 -> Helmet
+# 1 -> No Helmet
+#
+HELMET_ID = 0
+HELMET_NO_HELMET_ID = 1
+
+
+# ============================================================
+# MODEL VARIABLES
 # ============================================================
 
 main_model = None
@@ -83,34 +155,47 @@ def load_models():
 
     print("")
     print("=" * 70)
-    print("TRAFFICGUARD AI - MODEL RESTORATION")
+    print("TRAFFICGUARD AI - MODEL LOADING")
     print("=" * 70)
 
     print("")
-    print("Main model path:")
+    print("Base directory:")
+    print(BASE_DIR)
+
+    print("")
+    print("Main model:")
     print(MAIN_MODEL_PATH)
 
     print("Main model exists:")
     print(os.path.isfile(MAIN_MODEL_PATH))
 
     print("")
-    print("Helmet model path:")
+    print("Helmet model:")
     print(HELMET_MODEL_PATH)
 
     print("Helmet model exists:")
     print(os.path.isfile(HELMET_MODEL_PATH))
 
-    print("")
-    print("-" * 70)
-
     # --------------------------------------------------------
-    # Main 25-class model
+    # MAIN MODEL
     # --------------------------------------------------------
 
-    if os.path.isfile(MAIN_MODEL_PATH):
+    if not os.path.isfile(MAIN_MODEL_PATH):
+
+        error = (
+            "Main model not found: "
+            + MAIN_MODEL_PATH
+        )
+
+        startup_errors.append(error)
+
+        print("❌", error)
+
+    else:
 
         try:
 
+            print("")
             print("Loading 25-class YOLO model...")
 
             main_model = YOLO(
@@ -130,25 +215,26 @@ def load_models():
 
             print("❌", message)
 
-    else:
+    # --------------------------------------------------------
+    # HELMET MODEL
+    # --------------------------------------------------------
 
-        message = (
-            "Main model not found: "
-            + MAIN_MODEL_PATH
+    if not os.path.isfile(HELMET_MODEL_PATH):
+
+        error = (
+            "Helmet model not found: "
+            + HELMET_MODEL_PATH
         )
 
-        startup_errors.append(message)
+        startup_errors.append(error)
 
-        print("❌", message)
+        print("❌", error)
 
-    # --------------------------------------------------------
-    # Helmet model
-    # --------------------------------------------------------
-
-    if os.path.isfile(HELMET_MODEL_PATH):
+    else:
 
         try:
 
+            print("")
             print("Loading helmet YOLO model...")
 
             helmet_model = YOLO(
@@ -168,134 +254,134 @@ def load_models():
 
             print("❌", message)
 
-    else:
-
-        message = (
-            "Helmet model not found: "
-            + HELMET_MODEL_PATH
-        )
-
-        startup_errors.append(message)
-
-        print("❌", message)
+    # --------------------------------------------------------
+    # FINAL STATUS
+    # --------------------------------------------------------
 
     print("")
     print("=" * 70)
 
-    if main_model is not None:
-        print("Main model : READY")
-    else:
-        print("Main model : FAILED")
+    print(
+        "Main model:",
+        "READY" if main_model is not None else "FAILED"
+    )
 
-    if helmet_model is not None:
-        print("Helmet model: READY")
-    else:
-        print("Helmet model: FAILED")
+    print(
+        "Helmet model:",
+        "READY" if helmet_model is not None else "FAILED"
+    )
 
     print("=" * 70)
     print("")
 
 
-# Load models when application starts
+# Load models exactly once when Gunicorn starts.
 load_models()
 
 
 # ============================================================
-# MAIN MODEL VIOLATION CLASSES
-# ============================================================
-# These are the violation class IDs already used in your
-# previous backend.
-#
-# 3  -> Triple Riding
-# 4  -> Phone While Driving
-# 9  -> Seatbelt Violation
-#
-# Helmet model provides:
-# 0 -> Helmet
-# 1 -> No Helmet
+# RESULT CONVERSION
 # ============================================================
 
-TARGET_MAIN = {
+def get_class_name(model, class_id):
 
-    3: "Triple Riding",
+    names = model.names
 
-    4: "Phone While Driving",
+    if isinstance(names, dict):
 
-    9: "Seatbelt Violation",
+        return names.get(
+            class_id,
+            str(class_id)
+        )
 
-}
+    try:
 
-HELMET_NO_HELMET_ID = 1
+        return names[class_id]
 
+    except Exception:
 
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def clean_text(text):
-
-    return re.sub(
-        r"[^A-Z0-9]",
-        "",
-        str(text).upper()
-    )
+        return str(class_id)
 
 
-def result_items(result, model):
+def extract_detections(result, model):
 
     detections = []
+
+    if result is None:
+        return detections
 
     if result.boxes is None:
         return detections
 
-    names = model.names
-
     for box in result.boxes:
 
-        class_id = int(
-            box.cls[0].item()
-        )
+        try:
 
-        confidence = float(
-            box.conf[0].item()
-        )
-
-        coordinates = box.xyxy[
-            0
-        ].cpu().numpy()
-
-        x1 = int(coordinates[0])
-        y1 = int(coordinates[1])
-        x2 = int(coordinates[2])
-        y2 = int(coordinates[3])
-
-        if isinstance(names, dict):
-
-            class_name = names.get(
-                class_id,
-                str(class_id)
+            class_id = int(
+                box.cls[0].item()
             )
 
-        else:
+            confidence = float(
+                box.conf[0].item()
+            )
 
-            class_name = names[class_id]
+            coords = (
+                box.xyxy[0]
+                .detach()
+                .cpu()
+                .numpy()
+            )
 
-        detections.append({
+            x1 = max(
+                0,
+                int(coords[0])
+            )
 
-            "id": class_id,
+            y1 = max(
+                0,
+                int(coords[1])
+            )
 
-            "name": class_name,
-
-            "confidence": confidence,
-
-            "box": [
+            x2 = max(
                 x1,
-                y1,
-                x2,
-                y2
-            ]
+                int(coords[2])
+            )
 
-        })
+            y2 = max(
+                y1,
+                int(coords[3])
+            )
+
+            class_name = get_class_name(
+                model,
+                class_id
+            )
+
+            detections.append({
+
+                "id": class_id,
+
+                "name": str(
+                    class_name
+                ),
+
+                "confidence": confidence,
+
+                "box": [
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                ]
+
+            })
+
+        except Exception as error:
+
+            print(
+                "Detection parsing warning:",
+                repr(error)
+            )
 
     return detections
 
@@ -306,23 +392,183 @@ def result_items(result, model):
 
 def encode_image(image):
 
-    success, buffer = cv2.imencode(
-        ".jpg",
-        image,
-        [
-            int(
-                cv2.IMWRITE_JPEG_QUALITY
-            ),
-            90
-        ]
-    )
+    try:
 
-    if not success:
+        # Keep returned image reasonably small.
+        height, width = image.shape[:2]
+
+        max_width = 1200
+
+        if width > max_width:
+
+            scale = (
+                max_width /
+                float(width)
+            )
+
+            new_width = max_width
+
+            new_height = int(
+                height * scale
+            )
+
+            image = cv2.resize(
+                image,
+                (
+                    new_width,
+                    new_height
+                ),
+                interpolation=cv2.INTER_AREA
+            )
+
+        success, buffer = cv2.imencode(
+            ".jpg",
+            image,
+            [
+                int(
+                    cv2.IMWRITE_JPEG_QUALITY
+                ),
+                82
+            ]
+        )
+
+        if not success:
+            return None
+
+        return base64.b64encode(
+            buffer.tobytes()
+        ).decode("utf-8")
+
+    except Exception as error:
+
+        print(
+            "Image encoding error:",
+            repr(error)
+        )
+
         return None
 
-    return base64.b64encode(
-        buffer.tobytes()
-    ).decode("utf-8")
+
+# ============================================================
+# DRAW DETECTIONS
+# ============================================================
+
+def draw_detection(
+    image,
+    detection,
+    is_violation
+):
+
+    x1, y1, x2, y2 = detection["box"]
+
+    if is_violation:
+
+        # Red
+        color = (
+            60,
+            70,
+            255
+        )
+
+    else:
+
+        # Green
+        color = (
+            80,
+            210,
+            150
+        )
+
+    # Bounding box
+    cv2.rectangle(
+        image,
+        (x1, y1),
+        (x2, y2),
+        color,
+        2
+    )
+
+    label = (
+        f'{detection["name"]} '
+        f'{detection["confidence"]:.0%}'
+    )
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    font_scale = 0.55
+
+    thickness = 2
+
+    (
+        text_width,
+        text_height
+    ), baseline = cv2.getTextSize(
+        label,
+        font,
+        font_scale,
+        thickness
+    )
+
+    label_width = max(
+        120,
+        text_width + 10
+    )
+
+    label_height = (
+        text_height +
+        baseline +
+        8
+    )
+
+    label_y2 = max(
+        label_height,
+        y1
+    )
+
+    label_y1 = max(
+        0,
+        label_y2 - label_height
+    )
+
+    # Label background
+    cv2.rectangle(
+        image,
+        (
+            x1,
+            label_y1
+        ),
+        (
+            x1 + label_width,
+            label_y2
+        ),
+        color,
+        -1
+    )
+
+    # Label text
+    text_y = (
+        label_y2 -
+        baseline -
+        4
+    )
+
+    cv2.putText(
+        image,
+        label,
+        (
+            x1 + 5,
+            text_y
+        ),
+        font,
+        font_scale,
+        (
+            10,
+            10,
+            15
+        ),
+        thickness,
+        cv2.LINE_AA
+    )
 
 
 # ============================================================
@@ -343,15 +589,28 @@ def analyze_image(image):
             "Helmet YOLO model is not loaded."
         )
 
+    # --------------------------------------------------------
+    # Optional memory cleanup
+    # --------------------------------------------------------
+
+    if torch is not None:
+
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
     violations = []
 
-    all_boxes = []
-
+    all_detections = []
 
     # ========================================================
-    # 1. MAIN 25-CLASS YOLO MODEL
+    # STEP 1
+    # MAIN 25-CLASS YOLO
     # ========================================================
 
+    print("")
     print("Running 25-class model...")
 
     main_results = main_model.predict(
@@ -360,7 +619,13 @@ def analyze_image(image):
 
         conf=MAIN_CONF,
 
-        imgsz=640,
+        iou=0.50,
+
+        imgsz=INFERENCE_SIZE,
+
+        max_det=MAX_DETECTIONS,
+
+        device="cpu",
 
         verbose=False
 
@@ -368,26 +633,20 @@ def analyze_image(image):
 
     main_result = main_results[0]
 
-    main_items = result_items(
+    main_detections = extract_detections(
         main_result,
         main_model
     )
 
+    print(
+        "Main detections:",
+        len(main_detections)
+    )
 
-    # --------------------------------------------------------
-    # Process main detections
-    # --------------------------------------------------------
+    # Process target violations
+    for detection in main_detections:
 
-    for item in main_items:
-
-        all_boxes.append(
-            (
-                "main",
-                item
-            )
-        )
-
-        class_id = item["id"]
+        class_id = detection["id"]
 
         if class_id in TARGET_MAIN:
 
@@ -397,15 +656,43 @@ def analyze_image(image):
                     TARGET_MAIN[class_id],
 
                 "confidence":
-                    item["confidence"]
+                    detection["confidence"],
+
+                "box":
+                    detection["box"]
 
             })
 
+            all_detections.append({
+
+                "detection":
+                    detection,
+
+                "violation":
+                    True
+
+            })
+
+        else:
+
+            # Keep other detected classes visible
+            # but don't count them as target violations.
+            all_detections.append({
+
+                "detection":
+                    detection,
+
+                "violation":
+                    False
+
+            })
 
     # ========================================================
-    # 2. HELMET MODEL
+    # STEP 2
+    # HELMET MODEL
     # ========================================================
 
+    print("")
     print("Running helmet model...")
 
     helmet_results = helmet_model.predict(
@@ -414,7 +701,13 @@ def analyze_image(image):
 
         conf=HELMET_CONF,
 
-        imgsz=640,
+        iou=0.50,
+
+        imgsz=INFERENCE_SIZE,
+
+        max_det=MAX_DETECTIONS,
+
+        device="cpu",
 
         verbose=False
 
@@ -422,37 +715,41 @@ def analyze_image(image):
 
     helmet_result = helmet_results[0]
 
-    helmet_items = result_items(
+    helmet_detections = extract_detections(
         helmet_result,
         helmet_model
     )
 
+    print(
+        "Helmet detections:",
+        len(helmet_detections)
+    )
 
     helmet_status = "Not detected"
 
+    no_helmet_found = False
+    helmet_found = False
 
-    # --------------------------------------------------------
-    # Process helmet detections
-    # --------------------------------------------------------
+    for detection in helmet_detections:
 
-    for item in helmet_items:
+        class_id = detection["id"]
 
-        all_boxes.append(
-            (
-                "helmet",
-                item
-            )
+        class_name = (
+            str(
+                detection["name"]
+            ).lower()
         )
 
-        class_id = item["id"]
+        # ----------------------------------------------------
+        # NO HELMET
+        # ----------------------------------------------------
 
-        class_name = str(
-            item["name"]
-        ).lower()
+        if (
+            class_id ==
+            HELMET_NO_HELMET_ID
+        ):
 
-
-        # No helmet
-        if class_id == HELMET_NO_HELMET_ID:
+            no_helmet_found = True
 
             violations.append({
 
@@ -460,196 +757,127 @@ def analyze_image(image):
                     "No Helmet",
 
                 "confidence":
-                    item["confidence"]
+                    detection["confidence"],
+
+                "box":
+                    detection["box"]
 
             })
 
-            helmet_status = "No Helmet"
+            all_detections.append({
 
+                "detection":
+                    detection,
 
-        # Helmet detected
+                "violation":
+                    True
+
+            })
+
+        # ----------------------------------------------------
+        # HELMET
+        # ----------------------------------------------------
+
         elif (
-            class_id == 0
+            class_id == HELMET_ID
             or "helmet" in class_name
         ):
 
-            if helmet_status != "No Helmet":
+            helmet_found = True
 
-                helmet_status = (
-                    "Helmet detected"
-                )
+            all_detections.append({
 
+                "detection":
+                    detection,
+
+                "violation":
+                    False
+
+            })
+
+    # Helmet status
+    if no_helmet_found:
+
+        helmet_status = "No Helmet"
+
+    elif helmet_found:
+
+        helmet_status = "Helmet detected"
+
+    else:
+
+        helmet_status = "Not detected"
 
     # ========================================================
-    # DRAW ANNOTATIONS
+    # STEP 3
+    # REMOVE DUPLICATE VIOLATION TYPES
     # ========================================================
 
-    annotated = image.copy()
+    # If multiple detections of the same target are returned,
+    # keep the highest-confidence one for the dashboard.
 
+    best_violations = {}
 
-    for source, item in all_boxes:
+    for violation in violations:
 
-        x1, y1, x2, y2 = item["box"]
+        violation_type = (
+            violation["type"]
+        )
 
-
-        # --------------------------------------------
-        # Red = violation
-        # Green = normal detection
-        # --------------------------------------------
-
-        is_violation = False
-
-        if item["id"] in TARGET_MAIN:
-
-            is_violation = True
+        confidence = (
+            violation["confidence"]
+        )
 
         if (
-            source == "helmet"
-            and item["id"]
-            == HELMET_NO_HELMET_ID
+            violation_type
+            not in best_violations
         ):
 
-            is_violation = True
+            best_violations[
+                violation_type
+            ] = violation
 
+        elif confidence > best_violations[
+            violation_type
+        ]["confidence"]:
 
-        if is_violation:
+            best_violations[
+                violation_type
+            ] = violation
 
-            # BGR = red
-            color = (
-                60,
-                70,
-                255
-            )
-
-        else:
-
-            # BGR = green
-            color = (
-                80,
-                210,
-                150
-            )
-
-
-        # --------------------------------------------
-        # Bounding box
-        # --------------------------------------------
-
-        cv2.rectangle(
-
-            annotated,
-
-            (x1, y1),
-
-            (x2, y2),
-
-            color,
-
-            2
-
-        )
-
-
-        # --------------------------------------------
-        # Label
-        # --------------------------------------------
-
-        label = (
-
-            f'{item["name"]} '
-            f'{item["confidence"]:.0%}'
-
-        )
-
-
-        label_width = max(
-            120,
-            len(label) * 8
-        )
-
-
-        label_y1 = max(
-            0,
-            y1 - 25
-        )
-
-
-        cv2.rectangle(
-
-            annotated,
-
-            (
-                x1,
-                label_y1
-            ),
-
-            (
-                x1 + label_width,
-                y1
-            ),
-
-            color,
-
-            -1
-
-        )
-
-
-        cv2.putText(
-
-            annotated,
-
-            label,
-
-            (
-                x1 + 5,
-                y1 - 7
-            ),
-
-            cv2.FONT_HERSHEY_SIMPLEX,
-
-            0.55,
-
-            (
-                10,
-                10,
-                15
-            ),
-
-            2
-
-        )
-
+    violations = list(
+        best_violations.values()
+    )
 
     # ========================================================
+    # STEP 4
     # CONFIDENCE
     # ========================================================
 
     confidence_scores = [
 
-        item["confidence"]
+        float(
+            violation["confidence"]
+        )
 
-        for item in violations
+        for violation in violations
 
     ]
-
 
     if confidence_scores:
 
         overall_confidence = (
-
             sum(confidence_scores)
             /
             len(confidence_scores)
-
         )
 
     else:
 
         overall_confidence = 0.0
 
-
     # ========================================================
+    # STEP 5
     # DECISION
     # ========================================================
 
@@ -668,18 +896,56 @@ def analyze_image(image):
 
         decision = "DETECTED"
 
+    # ========================================================
+    # STEP 6
+    # DRAW RESULT
+    # ========================================================
+
+    annotated = image.copy()
+
+    for item in all_detections:
+
+        detection = item[
+            "detection"
+        ]
+
+        is_violation = item[
+            "violation"
+        ]
+
+        draw_detection(
+            annotated,
+            detection,
+            is_violation
+        )
 
     # ========================================================
-    # ENCODE ANNOTATED IMAGE
+    # STEP 7
+    # ENCODE IMAGE
     # ========================================================
 
-    encoded = encode_image(
+    encoded_image = encode_image(
         annotated
     )
 
+    # ========================================================
+    # NUMBER PLATE
+    # ========================================================
+    #
+    # No plate_best.pt is currently deployed.
+    # Therefore don't pretend OCR is working.
+    #
+    # The frontend will correctly display:
+    # Number Plate -> Not detected
+    #
+    # ========================================================
+
+    plate_text = None
+    plate_confidence = None
+    ocr_confidence = None
 
     # ========================================================
-    # FINAL RESPONSE
+    # FINAL RESULT
     # ========================================================
 
     return {
@@ -696,16 +962,18 @@ def analyze_image(image):
             helmet_status,
 
         "plate_text":
-            None,
+            plate_text,
 
         "plate_confidence":
-            None,
+            plate_confidence,
 
         "ocr_confidence":
-            None,
+            ocr_confidence,
 
         "overall_confidence":
-            overall_confidence,
+            float(
+                overall_confidence
+            ),
 
         "camera_location":
             "Camera 01",
@@ -716,8 +984,7 @@ def analyze_image(image):
             ),
 
         "annotated_image":
-            encoded
-
+            encoded_image
     }
 
 
@@ -729,11 +996,8 @@ def analyze_image(image):
 def home():
 
     return send_from_directory(
-
         BASE_DIR,
-
         "index.html"
-
     )
 
 
@@ -758,9 +1022,17 @@ def health():
         "helmet_model":
             helmet_model is not None,
 
+        "plate_model":
+            False,
+
+        "ocr":
+            False,
+
+        "inference_size":
+            INFERENCE_SIZE,
+
         "startup_warnings":
             startup_errors
-
     })
 
 
@@ -772,7 +1044,7 @@ def health():
 def api_analyze():
 
     # --------------------------------------------------------
-    # Check uploaded image
+    # CHECK FILE
     # --------------------------------------------------------
 
     if "image" not in request.files:
@@ -786,11 +1058,9 @@ def api_analyze():
 
         }), 400
 
-
     uploaded = request.files[
         "image"
     ]
-
 
     if uploaded.filename == "":
 
@@ -803,13 +1073,11 @@ def api_analyze():
 
         }), 400
 
-
     # --------------------------------------------------------
-    # Read image
+    # READ FILE
     # --------------------------------------------------------
 
     data = uploaded.read()
-
 
     if not data:
 
@@ -822,28 +1090,19 @@ def api_analyze():
 
         }), 400
 
-
     # --------------------------------------------------------
-    # Decode image
+    # DECODE IMAGE
     # --------------------------------------------------------
 
     array = np.frombuffer(
-
         data,
-
         dtype=np.uint8
-
     )
-
 
     image = cv2.imdecode(
-
         array,
-
         cv2.IMREAD_COLOR
-
     )
-
 
     if image is None:
 
@@ -856,9 +1115,57 @@ def api_analyze():
 
         }), 400
 
+    # --------------------------------------------------------
+    # LIMIT VERY LARGE INPUT IMAGES
+    # --------------------------------------------------------
+
+    height, width = image.shape[:2]
+
+    max_dimension = 1600
+
+    if max(
+        height,
+        width
+    ) > max_dimension:
+
+        scale = (
+            max_dimension /
+            float(
+                max(
+                    height,
+                    width
+                )
+            )
+        )
+
+        new_width = max(
+            1,
+            int(
+                width * scale
+            )
+        )
+
+        new_height = max(
+            1,
+            int(
+                height * scale
+            )
+        )
+
+        image = cv2.resize(
+
+            image,
+
+            (
+                new_width,
+                new_height
+            ),
+
+            interpolation=cv2.INTER_AREA
+        )
 
     # --------------------------------------------------------
-    # Run AI analysis
+    # RUN AI
     # --------------------------------------------------------
 
     try:
@@ -868,8 +1175,21 @@ def api_analyze():
         print("NEW TRAFFIC IMAGE ANALYSIS")
         print("=" * 70)
 
+        print(
+            "Input size:",
+            image.shape[1],
+            "x",
+            image.shape[0]
+        )
+
         result = analyze_image(
             image
+        )
+
+        print("")
+        print(
+            "Decision:",
+            result["decision"]
         )
 
         print(
@@ -892,22 +1212,33 @@ def api_analyze():
         )
 
         print("=" * 70)
+        print("")
 
-        return jsonify(result)
-
+        return jsonify(
+            result
+        )
 
     except Exception as error:
 
         print("")
-        print("❌ DETECTION ERROR")
-        print(str(error))
+        print("=" * 70)
+        print("❌ AI ANALYSIS ERROR")
+        print("=" * 70)
+        print(
+            repr(error)
+        )
+        print("=" * 70)
+        print("")
 
         return jsonify({
 
             "success": False,
 
             "error":
-                f"Detection request failed: {error}"
+                "AI analysis failed.",
+
+            "details":
+                str(error)
 
         }), 500
 
@@ -917,7 +1248,7 @@ def api_analyze():
 # ============================================================
 
 @app.errorhandler(413)
-def too_large(error):
+def file_too_large(error):
 
     return jsonify({
 
@@ -930,18 +1261,41 @@ def too_large(error):
 
 
 # ============================================================
-# START SERVER
+# GENERAL ERROR HANDLER
+# ============================================================
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+
+    print(
+        "Unhandled application error:",
+        repr(error)
+    )
+
+    return jsonify({
+
+        "success": False,
+
+        "error":
+            "Server error.",
+
+        "details":
+            str(error)
+
+    }), 500
+
+
+# ============================================================
+# LOCAL SERVER
 # ============================================================
 
 if __name__ == "__main__":
 
     port = int(
-
         os.environ.get(
             "PORT",
             "10000"
         )
-
     )
 
     print("")
@@ -968,6 +1322,11 @@ if __name__ == "__main__":
         )
     )
 
+    print(
+        "Inference size:",
+        INFERENCE_SIZE
+    )
+
     print("=" * 70)
     print("")
 
@@ -978,5 +1337,4 @@ if __name__ == "__main__":
         port=port,
 
         debug=False
-
     )
