@@ -1,0 +1,3300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TrafficGuard AI — Intelligent Road Safety</title>
+
+<style>
+/* =========================================================
+   TRAFFICGUARD AI
+   PREMIUM SINGLE-FILE FRONTEND
+   ========================================================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+    --bg:#03070d;
+    --bg2:#07111d;
+    --panel:rgba(10,22,36,.78);
+    --panel2:rgba(14,30,48,.72);
+    --border:rgba(255,255,255,.09);
+
+    --orange:#ff8a00;
+    --orange2:#ffb347;
+    --saffron:#ff9933;
+
+    --green:#18e88b;
+    --red:#ff4d5f;
+    --blue:#35b9ff;
+    --yellow:#ffd166;
+
+    --text:#f4f7fb;
+    --muted:#8191a7;
+    --muted2:#526277;
+
+    --shadow:0 25px 70px rgba(0,0,0,.45);
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    min-height:100vh;
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color:var(--text);
+    background:
+        radial-gradient(circle at 85% 10%,rgba(255,138,0,.10),transparent 25%),
+        radial-gradient(circle at 15% 80%,rgba(0,130,255,.08),transparent 30%),
+        linear-gradient(135deg,#02050a,#07111d 50%,#03070d);
+
+    overflow-x:hidden;
+}
+
+/* =========================================================
+   BACKGROUND
+   ========================================================= */
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.17;
+
+    background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+
+    background-size:45px 45px;
+
+    mask-image:linear-gradient(to bottom,black,transparent);
+}
+
+.ambient{
+    position:fixed;
+    width:500px;
+    height:500px;
+    border-radius:50%;
+    filter:blur(100px);
+    opacity:.09;
+    pointer-events:none;
+    z-index:-1;
+}
+
+.ambient.one{
+    background:#ff7900;
+    top:-200px;
+    right:-100px;
+}
+
+.ambient.two{
+    background:#008cff;
+    bottom:-250px;
+    left:-150px;
+}
+
+/* =========================================================
+   TOP NAV
+   ========================================================= */
+
+.topbar{
+    height:82px;
+    position:sticky;
+    top:0;
+    z-index:100;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 34px;
+
+    background:rgba(3,8,14,.82);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+
+    border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.logo{
+    width:48px;
+    height:48px;
+
+    border-radius:15px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        linear-gradient(145deg,#1b2635,#09111c);
+
+    border:1px solid rgba(255,138,0,.35);
+
+    box-shadow:
+        inset 0 0 25px rgba(255,138,0,.07),
+        0 10px 30px rgba(0,0,0,.4);
+
+    position:relative;
+    overflow:hidden;
+}
+
+.logo::after{
+    content:"";
+    position:absolute;
+    width:2px;
+    height:100%;
+    background:linear-gradient(transparent,#ff8a00,transparent);
+    animation:logoScan 2.2s infinite;
+}
+
+.traffic-light{
+    width:17px;
+    height:31px;
+    border-radius:10px;
+    background:#0c1118;
+    border:1px solid #344052;
+    padding:3px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.light{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+}
+
+.light.red{
+    background:#ff3b4d;
+    box-shadow:0 0 8px #ff3b4d;
+}
+
+.light.yellow{
+    background:#ffc247;
+    box-shadow:0 0 8px #ffc247;
+}
+
+.light.green{
+    background:#24e88d;
+    box-shadow:0 0 8px #24e88d;
+}
+
+.brand-text h1{
+    font-size:20px;
+    letter-spacing:-.5px;
+    font-weight:800;
+}
+
+.brand-text h1 span{
+    color:var(--orange);
+}
+
+.brand-text p{
+    margin-top:3px;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:2.2px;
+    color:#6e8098;
+}
+
+.system{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:10px 17px;
+
+    border-radius:30px;
+
+    background:rgba(24,232,139,.055);
+    border:1px solid rgba(24,232,139,.18);
+
+    color:#63efb0;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+.system-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#19e98a;
+    box-shadow:0 0 14px #19e98a;
+    animation:pulse 1.5s infinite;
+}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+
+.app{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    min-height:calc(100vh - 82px);
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar{
+    border-right:1px solid rgba(255,255,255,.07);
+    background:rgba(3,9,16,.7);
+    padding:28px 16px;
+
+    position:sticky;
+    top:82px;
+    height:calc(100vh - 82px);
+}
+
+.sidebar-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:2.4px;
+    color:#50617a;
+    padding:0 14px 15px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav-item{
+    position:relative;
+
+    display:flex;
+    align-items:center;
+    gap:13px;
+
+    padding:13px 14px;
+
+    border-radius:12px;
+
+    color:#7789a2;
+    font-size:13px;
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.nav-item:hover{
+    color:#fff;
+    background:rgba(255,255,255,.045);
+    transform:translateX(3px);
+}
+
+.nav-item.active{
+    color:#ffb34f;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,138,0,.13),
+            rgba(255,138,0,.025)
+        );
+
+    border:1px solid rgba(255,138,0,.12);
+}
+
+.nav-item.active::before{
+    content:"";
+    position:absolute;
+    left:-1px;
+    top:25%;
+    width:3px;
+    height:50%;
+    border-radius:5px;
+    background:var(--orange);
+    box-shadow:0 0 14px var(--orange);
+}
+
+.nav-icon{
+    width:22px;
+    text-align:center;
+    font-size:15px;
+}
+
+.engine-card{
+    margin-top:28px;
+    padding:18px 16px;
+
+    border-radius:17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,31,48,.8),
+            rgba(5,13,22,.8)
+        );
+
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:var(--shadow);
+}
+
+.engine-title{
+    font-size:10px;
+    color:#60718a;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    margin-bottom:16px;
+}
+
+.engine{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin:13px 0;
+
+    font-size:11px;
+    color:#8998ad;
+}
+
+.ready{
+    color:#38e99a;
+    font-weight:700;
+    font-size:10px;
+}
+
+.ready::before{
+    content:"";
+    display:inline-block;
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#20e58b;
+    margin-right:5px;
+    box-shadow:0 0 8px #20e58b;
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.main{
+    padding:44px;
+    max-width:1700px;
+    width:100%;
+    margin:auto;
+}
+
+.hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:30px;
+}
+
+.hero-label{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    color:#ffab43;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:2.2px;
+    font-weight:700;
+
+    margin-bottom:12px;
+}
+
+.hero-label::before{
+    content:"";
+    width:22px;
+    height:1px;
+    background:var(--orange);
+    box-shadow:0 0 8px var(--orange);
+}
+
+.hero h2{
+    font-size:clamp(34px,4vw,52px);
+    letter-spacing:-2.8px;
+    line-height:1;
+    font-weight:850;
+}
+
+.hero h2 span{
+    background:linear-gradient(90deg,#fff,#b8c4d5);
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.hero p{
+    margin-top:12px;
+    color:#7f90a8;
+    font-size:14px;
+}
+
+.date{
+    color:#52647c;
+    font-size:11px;
+}
+
+/* =========================================================
+   STAT CARDS
+   ========================================================= */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:20px;
+}
+
+.stat{
+    min-height:150px;
+    padding:22px;
+
+    position:relative;
+    overflow:hidden;
+
+    border-radius:20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(16,31,49,.78),
+            rgba(7,15,26,.8)
+        );
+
+    border:1px solid rgba(255,255,255,.075);
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.22),
+        inset 0 1px rgba(255,255,255,.035);
+
+    transition:.3s;
+}
+
+.stat:hover{
+    transform:translateY(-4px);
+    border-color:rgba(255,138,0,.22);
+    box-shadow:0 20px 55px rgba(0,0,0,.35);
+}
+
+.stat::after{
+    content:"";
+    position:absolute;
+    width:100px;
+    height:100px;
+    right:-40px;
+    bottom:-45px;
+    border-radius:50%;
+    background:rgba(255,138,0,.09);
+    filter:blur(5px);
+}
+
+.stat-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.stat-label{
+    color:#687a92;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1.7px;
+    font-weight:700;
+}
+
+.stat-icon{
+    width:34px;
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);
+
+    font-size:15px;
+}
+
+.stat-value{
+    margin-top:18px;
+    font-size:32px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-1px;
+}
+
+.stat-sub{
+    margin-top:9px;
+    color:#53647a;
+    font-size:10px;
+}
+
+/* =========================================================
+   CONTENT GRID
+   ========================================================= */
+
+.content{
+    display:grid;
+    grid-template-columns:minmax(0,1.6fr) minmax(300px,.75fr);
+    gap:20px;
+}
+
+.panel{
+    background:
+        linear-gradient(
+            145deg,
+            rgba(11,25,41,.88),
+            rgba(4,12,21,.9)
+        );
+
+    border:1px solid rgba(255,255,255,.075);
+
+    border-radius:23px;
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.28),
+        inset 0 1px rgba(255,255,255,.035);
+
+    overflow:hidden;
+}
+
+.panel-head{
+    padding:20px 23px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.panel-title{
+    font-size:15px;
+    font-weight:750;
+}
+
+.panel-sub{
+    color:#5f7087;
+    font-size:10px;
+    margin-top:4px;
+}
+
+.badge{
+    padding:7px 12px;
+    border-radius:20px;
+
+    font-size:9px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:1px;
+
+    background:rgba(53,185,255,.06);
+    border:1px solid rgba(53,185,255,.18);
+    color:#4cc5ff;
+}
+
+/* =========================================================
+   UPLOAD WORKSPACE
+   ========================================================= */
+
+.workspace{
+    padding:24px;
+}
+
+.upload-zone{
+    min-height:420px;
+
+    border:1px dashed rgba(255,138,0,.25);
+    border-radius:20px;
+
+    position:relative;
+    overflow:hidden;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(255,138,0,.035),
+            transparent 50%
+        ),
+        #050d17;
+
+    transition:.3s;
+}
+
+.upload-zone.dragging{
+    border-color:#ff9d32;
+    background:rgba(255,138,0,.07);
+    transform:scale(1.01);
+}
+
+.upload-zone::before{
+    content:"";
+    position:absolute;
+    inset:20px;
+
+    border:1px solid rgba(255,255,255,.035);
+    border-radius:16px;
+
+    pointer-events:none;
+}
+
+.corner{
+    position:absolute;
+    width:25px;
+    height:25px;
+    border-color:rgba(255,138,0,.65);
+    border-style:solid;
+}
+
+.corner.tl{
+    top:15px;
+    left:15px;
+    border-width:2px 0 0 2px;
+}
+
+.corner.tr{
+    top:15px;
+    right:15px;
+    border-width:2px 2px 0 0;
+}
+
+.corner.bl{
+    bottom:15px;
+    left:15px;
+    border-width:0 0 2px 2px;
+}
+
+.corner.br{
+    bottom:15px;
+    right:15px;
+    border-width:0 2px 2px 0;
+}
+
+.upload-content{
+    text-align:center;
+    position:relative;
+    z-index:2;
+}
+
+.upload-icon{
+    width:75px;
+    height:75px;
+
+    margin:auto;
+
+    border-radius:22px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        linear-gradient(145deg,#17283b,#09131f);
+
+    border:1px solid rgba(255,138,0,.2);
+
+    font-size:29px;
+
+    box-shadow:
+        0 20px 40px rgba(0,0,0,.35),
+        inset 0 0 30px rgba(255,138,0,.04);
+
+    animation:float 3s ease-in-out infinite;
+}
+
+.upload-content h3{
+    margin-top:20px;
+    font-size:17px;
+}
+
+.upload-content p{
+    color:#687991;
+    font-size:11px;
+    margin-top:8px;
+}
+
+.upload-button{
+    margin-top:20px;
+
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+
+    padding:12px 19px;
+
+    border-radius:12px;
+
+    border:1px solid rgba(255,138,0,.3);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,138,0,.18),
+            rgba(255,138,0,.05)
+        );
+
+    color:#ffb65a;
+
+    font-size:11px;
+    font-weight:750;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.upload-button:hover{
+    transform:translateY(-2px);
+    background:rgba(255,138,0,.22);
+    box-shadow:0 10px 30px rgba(255,138,0,.12);
+}
+
+#fileInput{
+    display:none;
+}
+
+.preview{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:#020810;
+}
+
+.preview.show{
+    display:flex;
+}
+
+.preview img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+}
+
+/* AI scanning */
+
+.scan-line{
+    position:absolute;
+    left:4%;
+    right:4%;
+    height:2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #ff8a00,
+            #fff,
+            #ff8a00,
+            transparent
+        );
+
+    box-shadow:
+        0 0 14px #ff8a00,
+        0 0 35px rgba(255,138,0,.55);
+
+    opacity:0;
+
+    z-index:5;
+}
+
+.scanning .scan-line{
+    opacity:1;
+    animation:scan 2s linear infinite;
+}
+
+.scan-label{
+    position:absolute;
+    top:18px;
+    left:22px;
+
+    padding:7px 11px;
+
+    border-radius:8px;
+
+    background:rgba(3,8,14,.75);
+    border:1px solid rgba(255,138,0,.18);
+
+    color:#ffad4d;
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:1px;
+
+    display:none;
+}
+
+.scanning .scan-label{
+    display:block;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+}
+
+.btn{
+    height:45px;
+    padding:0 20px;
+
+    border-radius:12px;
+
+    font-size:11px;
+    font-weight:750;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.btn-primary{
+    flex:1;
+
+    color:#080d13;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff9a2e,
+            #ff7200
+        );
+
+    border:0;
+
+    box-shadow:
+        0 10px 30px rgba(255,138,0,.18);
+}
+
+.btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 15px 35px rgba(255,138,0,.28);
+}
+
+.btn-secondary{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.08);
+    color:#8b9bb0;
+}
+
+.btn-secondary:hover{
+    color:#fff;
+    background:rgba(255,255,255,.07);
+}
+
+.btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+    transform:none;
+}
+
+/* =========================================================
+   RESULTS
+   ========================================================= */
+
+.result-body{
+    padding:22px;
+}
+
+.result-status{
+    padding:19px;
+
+    border-radius:17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.015)
+        );
+
+    border:1px solid rgba(255,255,255,.07);
+}
+
+.status-label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:1.7px;
+    color:#62748c;
+}
+
+.status-main{
+    margin-top:8px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    font-size:17px;
+    font-weight:750;
+}
+
+.status-state{
+    color:#18e88b;
+}
+
+.confidence-wrap{
+    margin-top:18px;
+}
+
+.confidence-top{
+    display:flex;
+    justify-content:space-between;
+    color:#71839a;
+    font-size:10px;
+}
+
+.confidence-top strong{
+    color:#fff;
+}
+
+.progress{
+    height:7px;
+    margin-top:9px;
+
+    border-radius:10px;
+
+    background:#142132;
+    overflow:hidden;
+}
+
+.progress-bar{
+    width:0%;
+    height:100%;
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff6d00,
+            #ffb347
+        );
+
+    box-shadow:0 0 14px rgba(255,138,0,.45);
+
+    transition:width 1s ease;
+}
+
+/* result rows */
+
+.result-list{
+    margin-top:18px;
+}
+
+.result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:14px 3px;
+
+    border-bottom:1px solid rgba(255,255,255,.055);
+
+    font-size:11px;
+}
+
+.result-row:last-child{
+    border-bottom:0;
+}
+
+.result-key{
+    color:#687a91;
+}
+
+.result-value{
+    color:#e9eef5;
+    font-weight:700;
+}
+
+.green{
+    color:#29e796;
+}
+
+.orange{
+    color:#ffae4d;
+}
+
+.red{
+    color:#ff6674;
+}
+
+/* =========================================================
+   CONFIDENCE RING
+   ========================================================= */
+
+.ring-box{
+    margin-top:22px;
+
+    display:flex;
+    justify-content:center;
+}
+
+.ring{
+    width:145px;
+    height:145px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        conic-gradient(
+            var(--orange) 0deg,
+            rgba(255,255,255,.05) 0deg
+        );
+
+    position:relative;
+}
+
+.ring::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+
+    border-radius:50%;
+
+    background:#07111d;
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.ring-inner{
+    position:relative;
+    text-align:center;
+}
+
+.ring-value{
+    font-size:25px;
+    font-weight:800;
+}
+
+.ring-label{
+    font-size:8px;
+    text-transform:uppercase;
+    letter-spacing:1.4px;
+    color:#687a91;
+}
+
+/* =========================================================
+   VIOLATIONS
+   ========================================================= */
+
+.section-title{
+    margin:22px 0 12px;
+
+    color:#6b7c92;
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-weight:800;
+}
+
+.violation{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.055);
+
+    margin-bottom:8px;
+}
+
+.violation-icon{
+    width:35px;
+    height:35px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:9px;
+
+    background:rgba(255,77,95,.08);
+    color:#ff6472;
+}
+
+.violation-name{
+    font-size:11px;
+    font-weight:700;
+}
+
+.violation-desc{
+    color:#596b82;
+    font-size:9px;
+    margin-top:3px;
+}
+
+/* =========================================================
+   OCR PLATE
+   ========================================================= */
+
+.plate{
+    margin-top:18px;
+
+    padding:18px;
+
+    border-radius:16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.015)
+        );
+
+    border:1px solid rgba(255,255,255,.065);
+}
+
+.plate-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.plate-title{
+    color:#6d7e94;
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:1.7px;
+}
+
+.ocr-status{
+    font-size:8px;
+    color:#24e895;
+}
+
+.plate-number{
+    margin-top:14px;
+
+    padding:13px;
+
+    text-align:center;
+
+    border-radius:8px;
+
+    background:#e9edf0;
+    color:#111820;
+
+    font-size:20px;
+    font-weight:900;
+
+    letter-spacing:4px;
+
+    box-shadow:
+        inset 0 0 0 2px #b7bdc2,
+        0 10px 25px rgba(0,0,0,.25);
+}
+
+/* =========================================================
+   REVIEW WORKFLOW
+   ========================================================= */
+
+.workflow{
+    margin-top:20px;
+
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.workflow-step{
+    padding:14px;
+
+    border-radius:13px;
+
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.06);
+
+    text-align:center;
+}
+
+.workflow-icon{
+    font-size:19px;
+}
+
+.workflow-name{
+    margin-top:7px;
+    font-size:9px;
+    font-weight:800;
+}
+
+.workflow-desc{
+    margin-top:4px;
+    color:#53647a;
+    font-size:8px;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer{
+    margin-top:24px;
+    padding:20px 5px 5px;
+
+    display:flex;
+    justify-content:space-between;
+
+    color:#405169;
+    font-size:9px;
+
+    border-top:1px solid rgba(255,255,255,.045);
+}
+
+.footer strong{
+    color:#708198;
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+.toast{
+    position:fixed;
+    right:25px;
+    bottom:25px;
+
+    min-width:280px;
+
+    padding:15px 18px;
+
+    border-radius:13px;
+
+    background:
+        rgba(8,17,28,.94);
+
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,.09);
+
+    box-shadow:0 20px 50px rgba(0,0,0,.4);
+
+    transform:translateY(120px);
+    opacity:0;
+
+    transition:.35s;
+
+    z-index:999;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+.toast-title{
+    font-size:11px;
+    font-weight:800;
+}
+
+.toast-message{
+    margin-top:4px;
+    color:#71839a;
+    font-size:9px;
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes pulse{
+    0%,100%{
+        transform:scale(1);
+        opacity:1;
+    }
+
+    50%{
+        transform:scale(1.45);
+        opacity:.6;
+    }
+}
+
+@keyframes float{
+    0%,100%{
+        transform:translateY(0);
+    }
+
+    50%{
+        transform:translateY(-8px);
+    }
+}
+
+@keyframes scan{
+    0%{
+        top:5%;
+    }
+
+    50%{
+        top:95%;
+    }
+
+    100%{
+        top:5%;
+    }
+}
+
+@keyframes logoScan{
+    0%{
+        left:-20px;
+    }
+
+    100%{
+        left:70px;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:1100px){
+
+    .app{
+        grid-template-columns:200px 1fr;
+    }
+
+    .main{
+        padding:30px;
+    }
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .content{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:760px){
+
+    .topbar{
+        padding:0 16px;
+    }
+
+    .brand-text p{
+        display:none;
+    }
+
+    .sidebar{
+        display:none;
+    }
+
+    .app{
+        display:block;
+    }
+
+    .main{
+        padding:22px 15px;
+    }
+
+    .hero{
+        display:block;
+    }
+
+    .date{
+        margin-top:15px;
+    }
+
+    .stats{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .stat{
+        min-height:125px;
+    }
+
+    .stat-value{
+        font-size:26px;
+    }
+
+    .upload-zone{
+        min-height:330px;
+    }
+
+    .workflow{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:480px){
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .actions{
+        flex-direction:column;
+    }
+
+    .btn{
+        width:100%;
+    }
+
+    .system{
+        padding:8px 11px;
+    }
+
+    .system span{
+        display:none;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="ambient one"></div>
+<div class="ambient two"></div>
+
+<!-- =======================================================
+     TOP BAR
+     ======================================================= -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="logo">
+
+            <div class="traffic-light">
+                <div class="light red"></div>
+                <div class="light yellow"></div>
+                <div class="light green"></div>
+            </div>
+
+        </div>
+
+        <div class="brand-text">
+
+            <h1>
+                TRAFFIC<span>GUARD</span> AI
+            </h1>
+
+            <p>
+                Intelligent Road Safety Platform
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="system">
+        <div class="system-dot"></div>
+        <span>SYSTEM ONLINE</span>
+    </div>
+
+</header>
+
+
+<div class="app">
+
+<!-- =======================================================
+     SIDEBAR
+     ======================================================= -->
+
+<aside class="sidebar">
+
+    <div class="sidebar-title">
+        Command Center
+    </div>
+
+    <div class="nav">
+
+        <div class="nav-item active">
+            <span class="nav-icon">◉</span>
+            Overview
+        </div>
+
+        <div class="nav-item">
+            <span class="nav-icon">⌁</span>
+            Detection
+        </div>
+
+        <div class="nav-item">
+            <span class="nav-icon">▣</span>
+            Evidence
+        </div>
+
+        <div class="nav-item">
+            <span class="nav-icon">✓</span>
+            Human Review
+        </div>
+
+        <div class="nav-item">
+            <span class="nav-icon">◫</span>
+            Analytics
+        </div>
+
+    </div>
+
+
+    <div class="engine-card">
+
+        <div class="engine-title">
+            AI Engines
+        </div>
+
+        <div class="engine">
+            <span>25-Class YOLO</span>
+            <span class="ready">READY</span>
+        </div>
+
+        <div class="engine">
+            <span>Helmet Model</span>
+            <span class="ready">READY</span>
+        </div>
+
+        <div class="engine">
+            <span>OCR Engine</span>
+            <span class="ready">READY</span>
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- =======================================================
+     MAIN
+     ======================================================= -->
+
+<main class="main">
+
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div>
+
+            <div class="hero-label">
+                AI TRAFFIC INTELLIGENCE
+            </div>
+
+            <h2>
+                <span>Road Safety.</span>
+                <br>
+                Reimagined.
+            </h2>
+
+            <p>
+                AI-powered detection, evidence intelligence and
+                automated traffic violation analysis.
+            </p>
+
+        </div>
+
+        <div class="date" id="dateTime">
+            System time
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         STATISTICS
+         =================================================== -->
+
+    <section class="stats">
+
+        <div class="stat">
+
+            <div class="stat-top">
+
+                <div class="stat-label">
+                    Violations
+                </div>
+
+                <div class="stat-icon">
+                    🚨
+                </div>
+
+            </div>
+
+            <div class="stat-value" id="violationCount">
+                00
+            </div>
+
+            <div class="stat-sub">
+                Current analysis
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+
+                <div class="stat-label">
+                    Helmet Status
+                </div>
+
+                <div class="stat-icon">
+                    🪖
+                </div>
+
+            </div>
+
+            <div class="stat-value" id="helmetStatus">
+                —
+            </div>
+
+            <div class="stat-sub">
+                AI classification
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+
+                <div class="stat-label">
+                    License Plate
+                </div>
+
+                <div class="stat-icon">
+                    ▣
+                </div>
+
+            </div>
+
+            <div class="stat-value" id="plateStat">
+                —
+            </div>
+
+            <div class="stat-sub">
+                OCR recognition
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-top">
+
+                <div class="stat-label">
+                    Confidence
+                </div>
+
+                <div class="stat-icon">
+                    ◎
+                </div>
+
+            </div>
+
+            <div class="stat-value" id="confidenceStat">
+                —
+            </div>
+
+            <div class="stat-sub">
+                Detection confidence
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         CONTENT
+         =================================================== -->
+
+    <section class="content">
+
+
+        <!-- LEFT PANEL -->
+
+        <div class="panel">
+
+            <div class="panel-head">
+
+                <div>
+
+                    <div class="panel-title">
+                        Live AI Analysis
+                    </div>
+
+                    <div class="panel-sub">
+                        Computer vision inspection workspace
+                    </div>
+
+                </div>
+
+                <div class="badge">
+                    AI VISION
+                </div>
+
+            </div>
+
+
+            <div class="workspace">
+
+                <div
+                    class="upload-zone"
+                    id="uploadZone"
+                >
+
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+
+                    <div class="scan-line"></div>
+
+                    <div class="scan-label">
+                        AI ANALYSIS IN PROGRESS
+                    </div>
+
+
+                    <div
+                        class="upload-content"
+                        id="uploadContent"
+                    >
+
+                        <div class="upload-icon">
+                            ⬆
+                        </div>
+
+                        <h3>
+                            Traffic Image
+                        </h3>
+
+                        <p>
+                            Upload a road image for intelligent
+                            violation analysis
+                        </p>
+
+                        <label
+                            class="upload-button"
+                            for="fileInput"
+                        >
+                            ＋ Choose Traffic Image
+                        </label>
+
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept="image/*"
+                        >
+
+                    </div>
+
+
+                    <div class="preview" id="preview">
+                        <img id="previewImage" alt="Traffic preview">
+                    </div>
+
+                </div>
+
+
+                <div class="actions">
+
+                    <button
+                        class="btn btn-primary"
+                        id="analyseBtn"
+                        disabled
+                    >
+                        ⚡ Analyse Traffic
+                    </button>
+
+                    <button
+                        class="btn btn-secondary"
+                        id="clearBtn"
+                    >
+                        Clear
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT PANEL -->
+
+        <div class="panel">
+
+            <div class="panel-head">
+
+                <div>
+
+                    <div class="panel-title">
+                        Detection Intelligence
+                    </div>
+
+                    <div class="panel-sub">
+                        AI decision & evidence routing
+                    </div>
+
+                </div>
+
+                <div
+                    class="badge"
+                    id="resultBadge"
+                >
+                    WAITING
+                </div>
+
+            </div>
+
+
+            <div class="result-body">
+
+
+                <!-- STATUS -->
+
+                <div class="result-status">
+
+                    <div class="status-label">
+                        Analysis Status
+                    </div>
+
+                    <div class="status-main">
+
+                        <span id="analysisStatus">
+                            Waiting for image
+                        </span>
+
+                        <span
+                            class="status-state"
+                            id="statusState"
+                        >
+                            ●
+                        </span>
+
+                    </div>
+
+
+                    <div class="confidence-wrap">
+
+                        <div class="confidence-top">
+
+                            <span>
+                                OVERALL CONFIDENCE
+                            </span>
+
+                            <strong id="confidenceText">
+                                0%
+                            </strong>
+
+                        </div>
+
+                        <div class="progress">
+
+                            <div
+                                class="progress-bar"
+                                id="progressBar"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CONFIDENCE RING -->
+
+                <div class="ring-box">
+
+                    <div
+                        class="ring"
+                        id="confidenceRing"
+                    >
+
+                        <div class="ring-inner">
+
+                            <div
+                                class="ring-value"
+                                id="ringValue"
+                            >
+                                0%
+                            </div>
+
+                            <div class="ring-label">
+                                AI Confidence
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DETAILS -->
+
+                <div class="section-title">
+                    Detection Details
+                </div>
+
+                <div class="result-list">
+
+                    <div class="result-row">
+
+                        <span class="result-key">
+                            Violations
+                        </span>
+
+                        <span
+                            class="result-value"
+                            id="violationsResult"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="result-row">
+
+                        <span class="result-key">
+                            Number Plate
+                        </span>
+
+                        <span
+                            class="result-value"
+                            id="plateResult"
+                        >
+                            Not detected
+                        </span>
+
+                    </div>
+
+
+                    <div class="result-row">
+
+                        <span class="result-key">
+                            OCR Confidence
+                        </span>
+
+                        <span
+                            class="result-value"
+                            id="ocrConfidence"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="result-row">
+
+                        <span class="result-key">
+                            Evidence Route
+                        </span>
+
+                        <span
+                            class="result-value orange"
+                            id="evidenceRoute"
+                        >
+                            Waiting
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- VIOLATIONS -->
+
+                <div class="section-title">
+                    Detected Violations
+                </div>
+
+                <div id="violationList">
+
+                    <div class="violation">
+
+                        <div class="violation-icon">
+                            ⓘ
+                        </div>
+
+                        <div>
+
+                            <div class="violation-name">
+                                No violation detected
+                            </div>
+
+                            <div class="violation-desc">
+                                Upload an image to begin analysis
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PLATE -->
+
+                <div class="plate">
+
+                    <div class="plate-head">
+
+                        <div class="plate-title">
+                            Number Plate / OCR
+                        </div>
+
+                        <div
+                            class="ocr-status"
+                            id="ocrStatus"
+                        >
+                            WAITING
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="plate-number"
+                        id="plateNumber"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         WORKFLOW
+         =================================================== -->
+
+    <section class="panel" style="margin-top:20px;">
+
+        <div class="panel-head">
+
+            <div>
+
+                <div class="panel-title">
+                    Evidence Intelligence Pipeline
+                </div>
+
+                <div class="panel-sub">
+                    Automated routing based on detection confidence
+                </div>
+
+            </div>
+
+            <div class="badge">
+                SMART ROUTING
+            </div>
+
+        </div>
+
+
+        <div style="padding:20px;">
+
+            <div class="workflow">
+
+                <div class="workflow-step">
+
+                    <div class="workflow-icon">
+                        🤖
+                    </div>
+
+                    <div class="workflow-name">
+                        DETECTED
+                    </div>
+
+                    <div class="workflow-desc">
+                        High-confidence violation
+                    </div>
+
+                </div>
+
+
+                <div class="workflow-step">
+
+                    <div class="workflow-icon">
+                        👤
+                    </div>
+
+                    <div class="workflow-name">
+                        HUMAN REVIEW
+                    </div>
+
+                    <div class="workflow-desc">
+                        Low confidence / uncertain OCR
+                    </div>
+
+                </div>
+
+
+                <div class="workflow-step">
+
+                    <div class="workflow-icon">
+                        📁
+                    </div>
+
+                    <div class="workflow-name">
+                        NOT DETECTED
+                    </div>
+
+                    <div class="workflow-desc">
+                        No relevant violation
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+
+        <div>
+            TRAFFICGUARD AI
+            <strong>• Intelligent Road Safety</strong>
+        </div>
+
+        <div>
+            Designed & Developed by
+            <strong>Karthik Kumar</strong>
+        </div>
+
+    </footer>
+
+</main>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div class="toast" id="toast">
+
+    <div
+        class="toast-title"
+        id="toastTitle"
+    >
+        System
+    </div>
+
+    <div
+        class="toast-message"
+        id="toastMessage"
+    >
+        Ready
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CONFIGURATION
+   ========================================================= */
+
+const API_URL = "/detect";
+
+
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const uploadZone =
+    document.getElementById("uploadZone");
+
+const uploadContent =
+    document.getElementById("uploadContent");
+
+const preview =
+    document.getElementById("preview");
+
+const previewImage =
+    document.getElementById("previewImage");
+
+const analyseBtn =
+    document.getElementById("analyseBtn");
+
+const clearBtn =
+    document.getElementById("clearBtn");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const confidenceText =
+    document.getElementById("confidenceText");
+
+const confidenceStat =
+    document.getElementById("confidenceStat");
+
+const ring =
+    document.getElementById("confidenceRing");
+
+const ringValue =
+    document.getElementById("ringValue");
+
+const analysisStatus =
+    document.getElementById("analysisStatus");
+
+const resultBadge =
+    document.getElementById("resultBadge");
+
+const violationCount =
+    document.getElementById("violationCount");
+
+const helmetStatus =
+    document.getElementById("helmetStatus");
+
+const plateStat =
+    document.getElementById("plateStat");
+
+const plateResult =
+    document.getElementById("plateResult");
+
+const plateNumber =
+    document.getElementById("plateNumber");
+
+const ocrConfidence =
+    document.getElementById("ocrConfidence");
+
+const ocrStatus =
+    document.getElementById("ocrStatus");
+
+const violationsResult =
+    document.getElementById("violationsResult");
+
+const evidenceRoute =
+    document.getElementById("evidenceRoute");
+
+const violationList =
+    document.getElementById("violationList");
+
+const toast =
+    document.getElementById("toast");
+
+const toastTitle =
+    document.getElementById("toastTitle");
+
+const toastMessage =
+    document.getElementById("toastMessage");
+
+let selectedFile = null;
+
+
+/* =========================================================
+   CLOCK
+   ========================================================= */
+
+function updateClock(){
+
+    const now = new Date();
+
+    document.getElementById("dateTime").textContent =
+        now.toLocaleString(
+            "en-IN",
+            {
+                day:"numeric",
+                month:"short",
+                year:"numeric",
+                hour:"numeric",
+                minute:"2-digit",
+                second:"2-digit"
+            }
+        );
+
+}
+
+updateClock();
+
+setInterval(updateClock,1000);
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+function showToast(title,message){
+
+    toastTitle.textContent = title;
+    toastMessage.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+        toast.classList.remove("show");
+    },3500);
+}
+
+
+/* =========================================================
+   FILE SELECTION
+   ========================================================= */
+
+fileInput.addEventListener("change",function(){
+
+    if(this.files.length > 0){
+
+        handleFile(this.files[0]);
+
+    }
+
+});
+
+
+/* =========================================================
+   DRAG & DROP
+   ========================================================= */
+
+uploadZone.addEventListener(
+    "dragover",
+    function(e){
+
+        e.preventDefault();
+
+        uploadZone.classList.add("dragging");
+
+    }
+);
+
+uploadZone.addEventListener(
+    "dragleave",
+    function(){
+
+        uploadZone.classList.remove("dragging");
+
+    }
+);
+
+uploadZone.addEventListener(
+    "drop",
+    function(e){
+
+        e.preventDefault();
+
+        uploadZone.classList.remove("dragging");
+
+        const file =
+            e.dataTransfer.files[0];
+
+        if(file && file.type.startsWith("image/")){
+
+            handleFile(file);
+
+        }else{
+
+            showToast(
+                "Invalid file",
+                "Please upload an image."
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   HANDLE FILE
+   ========================================================= */
+
+function handleFile(file){
+
+    selectedFile = file;
+
+    const reader =
+        new FileReader();
+
+    reader.onload = function(e){
+
+        previewImage.src =
+            e.target.result;
+
+        preview.classList.add("show");
+
+        uploadContent.style.display =
+            "none";
+
+        analyseBtn.disabled =
+            false;
+
+        analysisStatus.textContent =
+            "Image ready for analysis";
+
+        resultBadge.textContent =
+            "READY";
+
+        showToast(
+            "Image loaded",
+            file.name
+        );
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+
+/* =========================================================
+   CLEAR
+   ========================================================= */
+
+clearBtn.addEventListener(
+    "click",
+    clearAnalysis
+);
+
+function clearAnalysis(){
+
+    selectedFile = null;
+
+    fileInput.value = "";
+
+    preview.classList.remove("show");
+
+    uploadContent.style.display =
+        "block";
+
+    analyseBtn.disabled =
+        true;
+
+    uploadZone.classList.remove(
+        "scanning"
+    );
+
+    analysisStatus.textContent =
+        "Waiting for image";
+
+    resultBadge.textContent =
+        "WAITING";
+
+    confidenceText.textContent =
+        "0%";
+
+    confidenceStat.textContent =
+        "—";
+
+    ringValue.textContent =
+        "0%";
+
+    progressBar.style.width =
+        "0%";
+
+    ring.style.background =
+        `conic-gradient(
+            var(--orange) 0deg,
+            rgba(255,255,255,.05) 0deg
+        )`;
+
+    violationCount.textContent =
+        "00";
+
+    helmetStatus.textContent =
+        "—";
+
+    plateStat.textContent =
+        "—";
+
+    plateResult.textContent =
+        "Not detected";
+
+    ocrConfidence.textContent =
+        "—";
+
+    ocrStatus.textContent =
+        "WAITING";
+
+    violationsResult.textContent =
+        "—";
+
+    evidenceRoute.textContent =
+        "Waiting";
+
+    plateNumber.textContent =
+        "—";
+
+    violationList.innerHTML = `
+        <div class="violation">
+
+            <div class="violation-icon">
+                ⓘ
+            </div>
+
+            <div>
+
+                <div class="violation-name">
+                    No violation detected
+                </div>
+
+                <div class="violation-desc">
+                    Upload an image to begin analysis
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   ANALYSE
+   ========================================================= */
+
+analyseBtn.addEventListener(
+    "click",
+    analyseImage
+);
+
+async function analyseImage(){
+
+    if(!selectedFile){
+
+        showToast(
+            "No image",
+            "Please select an image first."
+        );
+
+        return;
+
+    }
+
+
+    uploadZone.classList.add(
+        "scanning"
+    );
+
+    analyseBtn.disabled = true;
+
+    resultBadge.textContent =
+        "ANALYSING";
+
+    analysisStatus.textContent =
+        "AI analysing traffic scene";
+
+    evidenceRoute.textContent =
+        "Processing";
+
+    showToast(
+        "AI Analysis",
+        "Running detection + OCR..."
+    );
+
+
+    try{
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "image",
+            selectedFile
+        );
+
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    method:"POST",
+                    body:formData
+                }
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Server returned " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Detection response:",
+            data
+        );
+
+
+        processDetectionResult(data);
+
+
+    }catch(error){
+
+        console.error(error);
+
+        uploadZone.classList.remove(
+            "scanning"
+        );
+
+        analyseBtn.disabled =
+            false;
+
+        resultBadge.textContent =
+            "ERROR";
+
+        analysisStatus.textContent =
+            "Detection request failed";
+
+        evidenceRoute.textContent =
+            "Backend error";
+
+        showToast(
+            "Detection failed",
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PROCESS BACKEND RESULT
+   ========================================================= */
+
+function processDetectionResult(data){
+
+    uploadZone.classList.remove(
+        "scanning"
+    );
+
+    analyseBtn.disabled =
+        false;
+
+
+    /*
+       This frontend accepts several common
+       response formats.
+
+       Example expected response:
+
+       {
+          violations: [...],
+          confidence: 0.87,
+          plate: "KA01AB1234",
+          ocr_confidence: 0.91,
+          helmet: "No Helmet"
+       }
+    */
+
+
+    const violations =
+        normalizeViolations(data);
+
+
+    const confidence =
+        getConfidence(data);
+
+
+    const plate =
+        getPlate(data);
+
+
+    const ocr =
+        getOCRConfidence(data);
+
+
+    const helmet =
+        getHelmet(data);
+
+
+    /* confidence */
+
+    const percent =
+        Math.round(
+            confidence * 100
+        );
+
+
+    confidenceText.textContent =
+        percent + "%";
+
+    confidenceStat.textContent =
+        percent + "%";
+
+    ringValue.textContent =
+        percent + "%";
+
+    progressBar.style.width =
+        percent + "%";
+
+
+    ring.style.background =
+        `conic-gradient(
+            var(--orange) ${percent * 3.6}deg,
+            rgba(255,255,255,.05) ${percent * 3.6}deg
+        )`;
+
+
+    /* violations */
+
+    violationCount.textContent =
+        String(violations.length)
+            .padStart(2,"0");
+
+    violationsResult.textContent =
+        violations.length
+            ? violations.join(", ")
+            : "None";
+
+
+    renderViolations(
+        violations
+    );
+
+
+    /* helmet */
+
+    helmetStatus.textContent =
+        helmet || "—";
+
+
+    /* plate */
+
+    if(plate){
+
+        plateStat.textContent =
+            plate;
+
+        plateResult.textContent =
+            plate;
+
+        plateNumber.textContent =
+            plate;
+
+        ocrStatus.textContent =
+            "DETECTED";
+
+    }else{
+
+        plateStat.textContent =
+            "—";
+
+        plateResult.textContent =
+            "Not detected";
+
+        plateNumber.textContent =
+            "—";
+
+        ocrStatus.textContent =
+            "NOT FOUND";
+
+    }
+
+
+    /* OCR */
+
+    if(ocr !== null){
+
+        ocrConfidence.textContent =
+            Math.round(
+                ocr * 100
+            ) + "%";
+
+    }else{
+
+        ocrConfidence.textContent =
+            "—";
+
+    }
+
+
+    /* evidence routing */
+
+    const route =
+        determineEvidenceRoute(
+            violations,
+            confidence,
+            plate,
+            ocr
+        );
+
+
+    evidenceRoute.textContent =
+        route;
+
+
+    /* final status */
+
+    if(violations.length > 0){
+
+        analysisStatus.textContent =
+            "Violation detected";
+
+        resultBadge.textContent =
+            "DETECTED";
+
+        showToast(
+            "Violation detected",
+            route
+        );
+
+    }else{
+
+        analysisStatus.textContent =
+            "No violation detected";
+
+        resultBadge.textContent =
+            "CLEAR";
+
+        showToast(
+            "Analysis complete",
+            "No relevant violation detected."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   NORMALIZE VIOLATIONS
+   ========================================================= */
+
+function normalizeViolations(data){
+
+    let values = [];
+
+    if(Array.isArray(data.violations)){
+
+        values =
+            data.violations;
+
+    }
+
+    else if(Array.isArray(data.detections)){
+
+        values =
+            data.detections.map(
+                x =>
+                    x.class ||
+                    x.name ||
+                    x.label
+            );
+
+    }
+
+    else if(Array.isArray(data.results)){
+
+        values =
+            data.results.map(
+                x =>
+                    x.class ||
+                    x.name ||
+                    x.label
+            );
+
+    }
+
+    else if(data.violation){
+
+        values =
+            [data.violation];
+
+    }
+
+
+    return values
+        .filter(Boolean)
+        .map(
+            x =>
+                String(x)
+        );
+
+}
+
+
+/* =========================================================
+   CONFIDENCE
+   ========================================================= */
+
+function getConfidence(data){
+
+    let value =
+        data.confidence ??
+        data.overall_confidence ??
+        data.detection_confidence ??
+        data.score ??
+        0;
+
+
+    value =
+        Number(value);
+
+
+    if(value > 1){
+        value =
+            value / 100;
+    }
+
+
+    if(isNaN(value)){
+        value = 0;
+    }
+
+
+    return Math.max(
+        0,
+        Math.min(
+            1,
+            value
+        )
+    );
+
+}
+
+
+/* =========================================================
+   PLATE
+   ========================================================= */
+
+function getPlate(data){
+
+    return (
+        data.plate ||
+        data.number_plate ||
+        data.license_plate ||
+        data.plate_text ||
+        data.ocr_text ||
+        ""
+    );
+
+}
+
+
+/* =========================================================
+   OCR
+   ========================================================= */
+
+function getOCRConfidence(data){
+
+    let value =
+        data.ocr_confidence ??
+        data.plate_confidence ??
+        null;
+
+
+    if(value === null){
+        return null;
+    }
+
+
+    value =
+        Number(value);
+
+
+    if(value > 1){
+        value =
+            value / 100;
+    }
+
+
+    return Math.max(
+        0,
+        Math.min(
+            1,
+            value
+        )
+    );
+
+}
+
+
+/* =========================================================
+   HELMET
+   ========================================================= */
+
+function getHelmet(data){
+
+    return (
+        data.helmet ||
+        data.helmet_status ||
+        data.helmet_detection ||
+        ""
+    );
+
+}
+
+
+/* =========================================================
+   EVIDENCE ROUTING
+   ========================================================= */
+
+function determineEvidenceRoute(
+    violations,
+    confidence,
+    plate,
+    ocr
+){
+
+    /*
+       HIGH CONFIDENCE
+       -> normal evidence
+
+       LOW CONFIDENCE
+       -> human review
+
+       NO DETECTION
+       -> not detected
+
+       OCR uncertainty
+       -> human review
+    */
+
+
+    if(
+        violations.length === 0
+    ){
+
+        return "NOT DETECTED";
+
+    }
+
+
+    if(
+        confidence < 0.60
+    ){
+
+        return "HUMAN REVIEW";
+
+    }
+
+
+    if(
+        plate &&
+        ocr !== null &&
+        ocr < 0.70
+    ){
+
+        return "HUMAN REVIEW";
+
+    }
+
+
+    if(
+        !plate
+    ){
+
+        return "HUMAN REVIEW";
+
+    }
+
+
+    return "EVIDENCE";
+
+
+}
+
+
+/* =========================================================
+   RENDER VIOLATIONS
+   ========================================================= */
+
+function renderViolations(
+    violations
+){
+
+    if(
+        !violations.length
+    ){
+
+        violationList.innerHTML = `
+            <div class="violation">
+
+                <div
+                    class="violation-icon"
+                    style="
+                        background:rgba(24,232,139,.08);
+                        color:#24e895;
+                    "
+                >
+                    ✓
+                </div>
+
+                <div>
+
+                    <div class="violation-name">
+                        No violation detected
+                    </div>
+
+                    <div class="violation-desc">
+                        Traffic scene appears clear
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    violationList.innerHTML =
+        violations
+            .map(
+                violation => `
+
+                <div class="violation">
+
+                    <div class="violation-icon">
+                        🚨
+                    </div>
+
+                    <div>
+
+                        <div class="violation-name">
+                            ${escapeHTML(violation)}
+                        </div>
+
+                        <div class="violation-desc">
+                            Detected by AI vision engine
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   SECURITY
+   ========================================================= */
+
+function escapeHTML(value){
+
+    return String(value)
+        .replace(
+            /[&<>"']/g,
+            function(char){
+
+                const map = {
+                    "&":"&amp;",
+                    "<":"&lt;",
+                    ">":"&gt;",
+                    '"':"&quot;",
+                    "'":"&#039;"
+                };
+
+                return map[char];
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   NAVIGATION EFFECT
+   ========================================================= */
+
+document
+    .querySelectorAll(".nav-item")
+    .forEach(item => {
+
+        item.addEventListener(
+            "click",
+            function(){
+
+                document
+                    .querySelectorAll(".nav-item")
+                    .forEach(
+                        x =>
+                            x.classList.remove(
+                                "active"
+                            )
+                    );
+
+                this.classList.add(
+                    "active"
+                );
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   INITIAL STATE
+   ========================================================= */
+
+clearAnalysis();
+
+</script>
+
+</body>
+</html>
