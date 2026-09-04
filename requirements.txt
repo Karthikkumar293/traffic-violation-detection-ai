@@ -1,8 +1,6 @@
-Flask
+flask
 gunicorn
 ultralytics
 opencv-python-headless
 numpy
-Pillow
-paddleocr
-paddlepaddle
+pillow
