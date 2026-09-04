@@ -1,439 +1,982 @@
 import os
-import uuid
-from pathlib import Path
+import re
+import base64
+from datetime import datetime
 
-from flask import Flask, request, jsonify, send_from_directory
-from werkzeug.utils import secure_filename
+import cv2
+import numpy as np
+from flask import Flask, jsonify, request, send_from_directory
 from ultralytics import YOLO
+
 
 # ============================================================
 # TRAFFICGUARD AI
 # Flask + YOLO Backend
+# Render Deployment Version
 # ============================================================
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# ------------------------------------------------------------
-# Configuration
-# ------------------------------------------------------------
+app = Flask(
+    __name__,
+    static_folder=BASE_DIR,
+    static_url_path=""
+)
 
-BASE_DIR = Path(__file__).resolve().parent
+# Maximum upload size: 12 MB
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 
-UPLOAD_FOLDER = BASE_DIR / "uploads"
-RESULT_FOLDER = BASE_DIR / "results"
 
-UPLOAD_FOLDER.mkdir(exist_ok=True)
-RESULT_FOLDER.mkdir(exist_ok=True)
+# ============================================================
+# MODEL PATHS
+# ============================================================
+# IMPORTANT:
+# Both models are in the SAME folder as app.py on GitHub.
+# Therefore, DO NOT use /content/ or Google Drive paths.
 
-app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)
-app.config["RESULT_FOLDER"] = str(RESULT_FOLDER)
+MAIN_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "main_25class_best.pt"
+)
 
-ALLOWED_EXTENSIONS = {
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-    "bmp",
-    "mp4",
-    "avi",
-    "mov",
-    "mkv",
+HELMET_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "helmet_balanced_best.pt"
+)
+
+
+# ============================================================
+# MODEL SETTINGS
+# ============================================================
+
+MAIN_CONF = float(
+    os.getenv("MAIN_CONF", "0.10")
+)
+
+HELMET_CONF = float(
+    os.getenv("HELMET_CONF", "0.10")
+)
+
+REVIEW_THRESHOLD = float(
+    os.getenv("REVIEW_THRESHOLD", "0.60")
+)
+
+
+# ============================================================
+# MODEL STATUS
+# ============================================================
+
+main_model = None
+helmet_model = None
+
+startup_errors = []
+
+
+# ============================================================
+# LOAD MODELS
+# ============================================================
+
+def load_models():
+
+    global main_model
+    global helmet_model
+
+    print("")
+    print("=" * 70)
+    print("TRAFFICGUARD AI - MODEL RESTORATION")
+    print("=" * 70)
+
+    print("")
+    print("Main model path:")
+    print(MAIN_MODEL_PATH)
+
+    print("Main model exists:")
+    print(os.path.isfile(MAIN_MODEL_PATH))
+
+    print("")
+    print("Helmet model path:")
+    print(HELMET_MODEL_PATH)
+
+    print("Helmet model exists:")
+    print(os.path.isfile(HELMET_MODEL_PATH))
+
+    print("")
+    print("-" * 70)
+
+    # --------------------------------------------------------
+    # Main 25-class model
+    # --------------------------------------------------------
+
+    if os.path.isfile(MAIN_MODEL_PATH):
+
+        try:
+
+            print("Loading 25-class YOLO model...")
+
+            main_model = YOLO(
+                MAIN_MODEL_PATH
+            )
+
+            print("✅ 25-class model loaded")
+
+        except Exception as error:
+
+            message = (
+                "Main model loading failed: "
+                + str(error)
+            )
+
+            startup_errors.append(message)
+
+            print("❌", message)
+
+    else:
+
+        message = (
+            "Main model not found: "
+            + MAIN_MODEL_PATH
+        )
+
+        startup_errors.append(message)
+
+        print("❌", message)
+
+    # --------------------------------------------------------
+    # Helmet model
+    # --------------------------------------------------------
+
+    if os.path.isfile(HELMET_MODEL_PATH):
+
+        try:
+
+            print("Loading helmet YOLO model...")
+
+            helmet_model = YOLO(
+                HELMET_MODEL_PATH
+            )
+
+            print("✅ Helmet model loaded")
+
+        except Exception as error:
+
+            message = (
+                "Helmet model loading failed: "
+                + str(error)
+            )
+
+            startup_errors.append(message)
+
+            print("❌", message)
+
+    else:
+
+        message = (
+            "Helmet model not found: "
+            + HELMET_MODEL_PATH
+        )
+
+        startup_errors.append(message)
+
+        print("❌", message)
+
+    print("")
+    print("=" * 70)
+
+    if main_model is not None:
+        print("Main model : READY")
+    else:
+        print("Main model : FAILED")
+
+    if helmet_model is not None:
+        print("Helmet model: READY")
+    else:
+        print("Helmet model: FAILED")
+
+    print("=" * 70)
+    print("")
+
+
+# Load models when application starts
+load_models()
+
+
+# ============================================================
+# MAIN MODEL VIOLATION CLASSES
+# ============================================================
+# These are the violation class IDs already used in your
+# previous backend.
+#
+# 3  -> Triple Riding
+# 4  -> Phone While Driving
+# 9  -> Seatbelt Violation
+#
+# Helmet model provides:
+# 0 -> Helmet
+# 1 -> No Helmet
+# ============================================================
+
+TARGET_MAIN = {
+
+    3: "Triple Riding",
+
+    4: "Phone While Driving",
+
+    9: "Seatbelt Violation",
+
 }
 
-# ------------------------------------------------------------
-# Model paths
-# ------------------------------------------------------------
-
-MAIN_MODEL_PATH = BASE_DIR / "main_25class_best.pt"
-HELMET_MODEL_PATH = BASE_DIR / "helmet_balanced_best.pt"
-
-print("=" * 70)
-print("TRAFFICGUARD AI - MODEL LOADING")
-print("=" * 70)
-
-print("Main model:")
-print(MAIN_MODEL_PATH)
-print("Exists:", MAIN_MODEL_PATH.exists())
-
-print("\nHelmet model:")
-print(HELMET_MODEL_PATH)
-print("Exists:", HELMET_MODEL_PATH.exists())
-
-# ------------------------------------------------------------
-# Load models
-# ------------------------------------------------------------
-
-if not MAIN_MODEL_PATH.exists():
-    raise FileNotFoundError(
-        f"Main model not found: {MAIN_MODEL_PATH}"
-    )
-
-if not HELMET_MODEL_PATH.exists():
-    raise FileNotFoundError(
-        f"Helmet model not found: {HELMET_MODEL_PATH}"
-    )
-
-print("\nLoading 25-class model...")
-main_model = YOLO(str(MAIN_MODEL_PATH))
-print("✅ 25-class model loaded")
-
-print("\nLoading helmet model...")
-helmet_model = YOLO(str(HELMET_MODEL_PATH))
-print("✅ Helmet model loaded")
-
-print("\n🎉 BOTH MODELS ARE READY")
-print("=" * 70)
+HELMET_NO_HELMET_ID = 1
 
 
 # ============================================================
-# Helper functions
+# HELPER FUNCTIONS
 # ============================================================
 
-def allowed_file(filename):
-    """Check whether the uploaded file has an allowed extension."""
-    if not filename:
-        return False
+def clean_text(text):
 
-    extension = filename.rsplit(".", 1)[-1].lower()
+    return re.sub(
+        r"[^A-Z0-9]",
+        "",
+        str(text).upper()
+    )
 
-    return extension in ALLOWED_EXTENSIONS
 
-
-def convert_detections(result):
-    """
-    Convert Ultralytics detection result into JSON-safe data.
-    """
+def result_items(result, model):
 
     detections = []
 
     if result.boxes is None:
         return detections
 
+    names = model.names
+
     for box in result.boxes:
 
-        class_id = int(box.cls[0].item())
-        confidence = float(box.conf[0].item())
-
-        # Get class name safely
-        class_name = result.names.get(
-            class_id,
-            str(class_id)
+        class_id = int(
+            box.cls[0].item()
         )
 
-        coordinates = box.xyxy[0].tolist()
+        confidence = float(
+            box.conf[0].item()
+        )
+
+        coordinates = box.xyxy[
+            0
+        ].cpu().numpy()
+
+        x1 = int(coordinates[0])
+        y1 = int(coordinates[1])
+        x2 = int(coordinates[2])
+        y2 = int(coordinates[3])
+
+        if isinstance(names, dict):
+
+            class_name = names.get(
+                class_id,
+                str(class_id)
+            )
+
+        else:
+
+            class_name = names[class_id]
 
         detections.append({
-            "class_id": class_id,
-            "class_name": class_name,
-            "confidence": round(confidence, 4),
-            "confidence_percent": round(
-                confidence * 100,
-                2
-            ),
-            "bbox": {
-                "x1": round(coordinates[0], 2),
-                "y1": round(coordinates[1], 2),
-                "x2": round(coordinates[2], 2),
-                "y2": round(coordinates[3], 2),
-            }
+
+            "id": class_id,
+
+            "name": class_name,
+
+            "confidence": confidence,
+
+            "box": [
+                x1,
+                y1,
+                x2,
+                y2
+            ]
+
         })
 
     return detections
 
 
-def save_annotated_result(result, output_path):
-    """Save YOLO annotated image/video result."""
+# ============================================================
+# IMAGE ENCODING
+# ============================================================
 
-    plotted = result.plot()
+def encode_image(image):
 
-    import cv2
+    success, buffer = cv2.imencode(
+        ".jpg",
+        image,
+        [
+            int(
+                cv2.IMWRITE_JPEG_QUALITY
+            ),
+            90
+        ]
+    )
 
-    cv2.imwrite(
-        str(output_path),
-        plotted
+    if not success:
+        return None
+
+    return base64.b64encode(
+        buffer.tobytes()
+    ).decode("utf-8")
+
+
+# ============================================================
+# ANALYZE IMAGE
+# ============================================================
+
+def analyze_image(image):
+
+    if main_model is None:
+
+        raise RuntimeError(
+            "25-class YOLO model is not loaded."
+        )
+
+    if helmet_model is None:
+
+        raise RuntimeError(
+            "Helmet YOLO model is not loaded."
+        )
+
+    violations = []
+
+    all_boxes = []
+
+
+    # ========================================================
+    # 1. MAIN 25-CLASS YOLO MODEL
+    # ========================================================
+
+    print("Running 25-class model...")
+
+    main_results = main_model.predict(
+
+        source=image,
+
+        conf=MAIN_CONF,
+
+        imgsz=640,
+
+        verbose=False
+
+    )
+
+    main_result = main_results[0]
+
+    main_items = result_items(
+        main_result,
+        main_model
     )
 
 
+    # --------------------------------------------------------
+    # Process main detections
+    # --------------------------------------------------------
+
+    for item in main_items:
+
+        all_boxes.append(
+            (
+                "main",
+                item
+            )
+        )
+
+        class_id = item["id"]
+
+        if class_id in TARGET_MAIN:
+
+            violations.append({
+
+                "type":
+                    TARGET_MAIN[class_id],
+
+                "confidence":
+                    item["confidence"]
+
+            })
+
+
+    # ========================================================
+    # 2. HELMET MODEL
+    # ========================================================
+
+    print("Running helmet model...")
+
+    helmet_results = helmet_model.predict(
+
+        source=image,
+
+        conf=HELMET_CONF,
+
+        imgsz=640,
+
+        verbose=False
+
+    )
+
+    helmet_result = helmet_results[0]
+
+    helmet_items = result_items(
+        helmet_result,
+        helmet_model
+    )
+
+
+    helmet_status = "Not detected"
+
+
+    # --------------------------------------------------------
+    # Process helmet detections
+    # --------------------------------------------------------
+
+    for item in helmet_items:
+
+        all_boxes.append(
+            (
+                "helmet",
+                item
+            )
+        )
+
+        class_id = item["id"]
+
+        class_name = str(
+            item["name"]
+        ).lower()
+
+
+        # No helmet
+        if class_id == HELMET_NO_HELMET_ID:
+
+            violations.append({
+
+                "type":
+                    "No Helmet",
+
+                "confidence":
+                    item["confidence"]
+
+            })
+
+            helmet_status = "No Helmet"
+
+
+        # Helmet detected
+        elif (
+            class_id == 0
+            or "helmet" in class_name
+        ):
+
+            if helmet_status != "No Helmet":
+
+                helmet_status = (
+                    "Helmet detected"
+                )
+
+
+    # ========================================================
+    # DRAW ANNOTATIONS
+    # ========================================================
+
+    annotated = image.copy()
+
+
+    for source, item in all_boxes:
+
+        x1, y1, x2, y2 = item["box"]
+
+
+        # --------------------------------------------
+        # Red = violation
+        # Green = normal detection
+        # --------------------------------------------
+
+        is_violation = False
+
+        if item["id"] in TARGET_MAIN:
+
+            is_violation = True
+
+        if (
+            source == "helmet"
+            and item["id"]
+            == HELMET_NO_HELMET_ID
+        ):
+
+            is_violation = True
+
+
+        if is_violation:
+
+            # BGR = red
+            color = (
+                60,
+                70,
+                255
+            )
+
+        else:
+
+            # BGR = green
+            color = (
+                80,
+                210,
+                150
+            )
+
+
+        # --------------------------------------------
+        # Bounding box
+        # --------------------------------------------
+
+        cv2.rectangle(
+
+            annotated,
+
+            (x1, y1),
+
+            (x2, y2),
+
+            color,
+
+            2
+
+        )
+
+
+        # --------------------------------------------
+        # Label
+        # --------------------------------------------
+
+        label = (
+
+            f'{item["name"]} '
+            f'{item["confidence"]:.0%}'
+
+        )
+
+
+        label_width = max(
+            120,
+            len(label) * 8
+        )
+
+
+        label_y1 = max(
+            0,
+            y1 - 25
+        )
+
+
+        cv2.rectangle(
+
+            annotated,
+
+            (
+                x1,
+                label_y1
+            ),
+
+            (
+                x1 + label_width,
+                y1
+            ),
+
+            color,
+
+            -1
+
+        )
+
+
+        cv2.putText(
+
+            annotated,
+
+            label,
+
+            (
+                x1 + 5,
+                y1 - 7
+            ),
+
+            cv2.FONT_HERSHEY_SIMPLEX,
+
+            0.55,
+
+            (
+                10,
+                10,
+                15
+            ),
+
+            2
+
+        )
+
+
+    # ========================================================
+    # CONFIDENCE
+    # ========================================================
+
+    confidence_scores = [
+
+        item["confidence"]
+
+        for item in violations
+
+    ]
+
+
+    if confidence_scores:
+
+        overall_confidence = (
+
+            sum(confidence_scores)
+            /
+            len(confidence_scores)
+
+        )
+
+    else:
+
+        overall_confidence = 0.0
+
+
+    # ========================================================
+    # DECISION
+    # ========================================================
+
+    if not violations:
+
+        decision = "NOT_DETECTED"
+
+    elif (
+        overall_confidence
+        < REVIEW_THRESHOLD
+    ):
+
+        decision = "HUMAN_REVIEW"
+
+    else:
+
+        decision = "DETECTED"
+
+
+    # ========================================================
+    # ENCODE ANNOTATED IMAGE
+    # ========================================================
+
+    encoded = encode_image(
+        annotated
+    )
+
+
+    # ========================================================
+    # FINAL RESPONSE
+    # ========================================================
+
+    return {
+
+        "success": True,
+
+        "decision":
+            decision,
+
+        "violations":
+            violations,
+
+        "helmet_status":
+            helmet_status,
+
+        "plate_text":
+            None,
+
+        "plate_confidence":
+            None,
+
+        "ocr_confidence":
+            None,
+
+        "overall_confidence":
+            overall_confidence,
+
+        "camera_location":
+            "Camera 01",
+
+        "timestamp":
+            datetime.now().isoformat(
+                timespec="seconds"
+            ),
+
+        "annotated_image":
+            encoded
+
+    }
+
+
 # ============================================================
-# Routes
+# HOME PAGE
 # ============================================================
 
-@app.route("/")
+@app.get("/")
 def home():
-    """Serve the TrafficGuard AI frontend."""
 
     return send_from_directory(
-        str(BASE_DIR),
+
+        BASE_DIR,
+
         "index.html"
+
     )
 
 
-@app.route("/health")
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
+@app.get("/api/health")
 def health():
-    """Health check endpoint for Render."""
 
     return jsonify({
-        "status": "online",
-        "service": "TrafficGuard AI",
-        "main_model": MAIN_MODEL_PATH.exists(),
-        "helmet_model": HELMET_MODEL_PATH.exists()
+
+        "status":
+            "online",
+
+        "service":
+            "TrafficGuard AI",
+
+        "main_model":
+            main_model is not None,
+
+        "helmet_model":
+            helmet_model is not None,
+
+        "startup_warnings":
+            startup_errors
+
     })
 
 
 # ============================================================
-# Image Analysis API
+# ANALYZE API
 # ============================================================
 
-@app.route("/api/analyze", methods=["POST"])
-def analyze():
+@app.post("/api/analyze")
+def api_analyze():
+
+    # --------------------------------------------------------
+    # Check uploaded image
+    # --------------------------------------------------------
+
+    if "image" not in request.files:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "No image uploaded."
+
+        }), 400
+
+
+    uploaded = request.files[
+        "image"
+    ]
+
+
+    if uploaded.filename == "":
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "No image selected."
+
+        }), 400
+
+
+    # --------------------------------------------------------
+    # Read image
+    # --------------------------------------------------------
+
+    data = uploaded.read()
+
+
+    if not data:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Uploaded image is empty."
+
+        }), 400
+
+
+    # --------------------------------------------------------
+    # Decode image
+    # --------------------------------------------------------
+
+    array = np.frombuffer(
+
+        data,
+
+        dtype=np.uint8
+
+    )
+
+
+    image = cv2.imdecode(
+
+        array,
+
+        cv2.IMREAD_COLOR
+
+    )
+
+
+    if image is None:
+
+        return jsonify({
+
+            "success": False,
+
+            "error":
+                "Could not decode the image."
+
+        }), 400
+
+
+    # --------------------------------------------------------
+    # Run AI analysis
+    # --------------------------------------------------------
 
     try:
 
-        # ----------------------------------------------------
-        # Check upload
-        # ----------------------------------------------------
-
-        if "file" not in request.files:
-
-            return jsonify({
-                "success": False,
-                "error": "No file uploaded."
-            }), 400
-
-        file = request.files["file"]
-
-        if file.filename == "":
-
-            return jsonify({
-                "success": False,
-                "error": "No file selected."
-            }), 400
-
-        if not allowed_file(file.filename):
-
-            return jsonify({
-                "success": False,
-                "error": "Unsupported file type."
-            }), 400
-
-        # ----------------------------------------------------
-        # Save uploaded file
-        # ----------------------------------------------------
-
-        original_name = secure_filename(
-            file.filename
-        )
-
-        unique_name = (
-            uuid.uuid4().hex
-            + "_"
-            + original_name
-        )
-
-        input_path = (
-            UPLOAD_FOLDER
-            / unique_name
-        )
-
-        file.save(str(input_path))
-
-        print("\n" + "=" * 70)
-        print("NEW ANALYSIS")
+        print("")
         print("=" * 70)
-        print("File:", original_name)
+        print("NEW TRAFFIC IMAGE ANALYSIS")
+        print("=" * 70)
 
-        # ----------------------------------------------------
-        # Run 25-class model
-        # ----------------------------------------------------
-
-        print("Running 25-class model...")
-
-        main_results = main_model.predict(
-            source=str(input_path),
-            conf=0.25,
-            imgsz=640,
-            verbose=False
+        result = analyze_image(
+            image
         )
 
-        # ----------------------------------------------------
-        # Run helmet model
-        # ----------------------------------------------------
-
-        print("Running helmet model...")
-
-        helmet_results = helmet_model.predict(
-            source=str(input_path),
-            conf=0.25,
-            imgsz=640,
-            verbose=False
+        print(
+            "Violations:",
+            len(
+                result["violations"]
+            )
         )
 
-        # ----------------------------------------------------
-        # Convert results
-        # ----------------------------------------------------
-
-        main_detections = []
-
-        for result in main_results:
-            main_detections.extend(
-                convert_detections(result)
-            )
-
-        helmet_detections = []
-
-        for result in helmet_results:
-            helmet_detections.extend(
-                convert_detections(result)
-            )
-
-        # ----------------------------------------------------
-        # Save annotated output
-        # ----------------------------------------------------
-
-        result_filename = (
-            Path(unique_name).stem
-            + "_result.jpg"
+        print(
+            "Helmet:",
+            result["helmet_status"]
         )
 
-        result_path = (
-            RESULT_FOLDER
-            / result_filename
+        print(
+            "Confidence:",
+            result[
+                "overall_confidence"
+            ]
         )
 
-        if main_results:
+        print("=" * 70)
 
-            save_annotated_result(
-                main_results[0],
-                result_path
-            )
+        return jsonify(result)
 
-        # ----------------------------------------------------
-        # Statistics
-        # ----------------------------------------------------
-
-        total_main = len(main_detections)
-        total_helmet = len(helmet_detections)
-
-        # Count classes
-        class_counts = {}
-
-        for detection in main_detections:
-
-            name = detection["class_name"]
-
-            class_counts[name] = (
-                class_counts.get(name, 0) + 1
-            )
-
-        # Helmet counts
-        helmet_class_counts = {}
-
-        for detection in helmet_detections:
-
-            name = detection["class_name"]
-
-            helmet_class_counts[name] = (
-                helmet_class_counts.get(name, 0) + 1
-            )
-
-        # ----------------------------------------------------
-        # Response
-        # ----------------------------------------------------
-
-        response = {
-            "success": True,
-
-            "filename": original_name,
-
-            "result_url": (
-                "/results/"
-                + result_filename
-            ),
-
-            "summary": {
-                "total_detections": total_main,
-                "helmet_detections": total_helmet,
-            },
-
-            "class_counts": class_counts,
-
-            "helmet_class_counts":
-                helmet_class_counts,
-
-            "detections": main_detections,
-
-            "helmet_detections":
-                helmet_detections,
-        }
-
-        print("\nAnalysis completed.")
-        print("Main detections:", total_main)
-        print("Helmet detections:", total_helmet)
-
-        return jsonify(response)
 
     except Exception as error:
 
-        print("\n❌ ANALYSIS ERROR")
+        print("")
+        print("❌ DETECTION ERROR")
         print(str(error))
 
         return jsonify({
+
             "success": False,
-            "error": str(error)
+
+            "error":
+                f"Detection request failed: {error}"
+
         }), 500
 
 
 # ============================================================
-# Serve result files
+# FILE TOO LARGE
 # ============================================================
 
-@app.route("/results/<filename>")
-def serve_result(filename):
-
-    return send_from_directory(
-        str(RESULT_FOLDER),
-        filename
-    )
-
-
-# ============================================================
-# Optional upload route
-# ============================================================
-
-@app.route("/api/status")
-def status():
+@app.errorhandler(413)
+def too_large(error):
 
     return jsonify({
-        "system": "TrafficGuard AI",
-        "status": "online",
-        "models": {
-            "25_class": MAIN_MODEL_PATH.exists(),
-            "helmet": HELMET_MODEL_PATH.exists()
-        }
-    })
+
+        "success": False,
+
+        "error":
+            "Image is too large. Maximum size is 12 MB."
+
+    }), 413
 
 
 # ============================================================
-# Run Flask
+# START SERVER
 # ============================================================
 
 if __name__ == "__main__":
 
     port = int(
+
         os.environ.get(
             "PORT",
-            8000
+            "10000"
+        )
+
+    )
+
+    print("")
+    print("=" * 70)
+    print("TRAFFICGUARD AI SERVER")
+    print("=" * 70)
+
+    print(
+        "Port:",
+        port
+    )
+
+    print(
+        "Main model:",
+        os.path.basename(
+            MAIN_MODEL_PATH
         )
     )
 
-    print("\n" + "=" * 70)
-    print("TRAFFICGUARD AI SERVER")
+    print(
+        "Helmet model:",
+        os.path.basename(
+            HELMET_MODEL_PATH
+        )
+    )
+
     print("=" * 70)
-    print(f"Starting server on port {port}")
-    print("=" * 70)
+    print("")
 
     app.run(
+
         host="0.0.0.0",
+
         port=port,
+
         debug=False
+
     )
