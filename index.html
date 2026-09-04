@@ -3,123 +3,3614 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TrafficGuard AI — Road Safety Intelligence</title>
+
+<title>TrafficGuard AI | Intelligent Road Safety</title>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-:root{--bg:#05080d;--panel:#0b111a;--panel2:#0f1722;--line:#1d2937;--text:#f4f7fb;--muted:#7f91a7;--saffron:#ff9d2e;--orange:#ff6b1b;--green:#25df8b;--red:#ff5268;--cyan:#48c9ff;--yellow:#ffd45a;--shadow:0 25px 80px rgba(0,0,0,.42)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 85% -5%,rgba(42,145,197,.16),transparent 65%),radial-gradient(700px 450px at 10% 10%,rgba(255,120,25,.11),transparent 65%),var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.38;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(#000,transparent 92%)}
-.top{height:82px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(5,8,13,.78);backdrop-filter:blur(20px)}
-.brand{display:flex;align-items:center;gap:14px}.logo{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;border:1px solid rgba(255,157,46,.38);background:linear-gradient(145deg,#20150d,#0c1520);box-shadow:0 0 35px rgba(255,128,26,.12);font-size:23px}.brand h1{font-family:"Space Grotesk";font-size:22px;letter-spacing:-.8px;margin:0}.brand h1 span{color:var(--saffron)}.brand small{display:block;color:#65788f;font-size:9px;font-weight:800;letter-spacing:2.6px;margin-top:5px}.online{display:flex;align-items:center;gap:9px;padding:10px 15px;border-radius:999px;color:#63e6a5;font-size:11px;font-weight:800;letter-spacing:.8px;border:1px solid rgba(37,223,139,.22);background:rgba(37,223,139,.055)}.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(37,223,139,.5);animation:pulse 1.8s infinite}@keyframes pulse{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.layout{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 82px)}aside{border-right:1px solid rgba(255,255,255,.07);background:rgba(5,9,15,.65);padding:28px 14px;position:sticky;top:82px;height:calc(100vh - 82px)}.label{font-size:9px;color:#566b82;font-weight:800;letter-spacing:2.4px}.nav{margin-top:16px;display:grid;gap:6px}.nav button{position:relative;border:1px solid transparent;background:transparent;color:#7b8da3;padding:13px 14px;border-radius:14px;text-align:left;font-weight:650;font-size:13px;cursor:pointer;transition:.25s}.nav button:hover{color:#e9f0f8;background:rgba(255,255,255,.035)}.nav button.active{color:#fff;background:linear-gradient(100deg,rgba(255,157,46,.14),rgba(255,157,46,.025));border-color:rgba(255,157,46,.16)}.nav button.active:before{content:"";position:absolute;left:-1px;top:10px;bottom:10px;width:3px;border-radius:5px;background:var(--saffron);box-shadow:0 0 14px var(--saffron)}
-.engine-box{margin-top:36px;padding:17px 14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,rgba(16,27,41,.78),rgba(8,13,21,.72));box-shadow:var(--shadow)}.engine{display:flex;justify-content:space-between;gap:8px;padding-top:15px;color:#8395a9;font-size:10px}.ready{color:var(--green);font-weight:800;font-size:9px}.author{margin-top:30px;padding:14px;color:#586d84;font-size:10px;line-height:1.7;border-top:1px solid rgba(255,255,255,.06)}.author b{color:#d9e2ed}
-main{width:100%;max-width:1500px;margin:auto;padding:38px clamp(22px,4vw,54px) 55px}.hero{display:flex;align-items:end;justify-content:space-between;margin-bottom:25px}.eyebrow{color:var(--saffron);font-size:9px;letter-spacing:2.8px;font-weight:800;margin-bottom:10px}.hero h2{font-family:"Space Grotesk";font-size:48px;line-height:1;letter-spacing:-2.6px;margin:0}.hero p{color:var(--muted);font-size:13px;margin:12px 0 0}.clock{color:#5d7086;font-size:10px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{position:relative;overflow:hidden;min-height:125px;padding:20px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(14,25,39,.94),rgba(7,12,19,.95));box-shadow:0 18px 45px rgba(0,0,0,.15);transition:.25s}.stat:hover{transform:translateY(-3px);border-color:#2a3c50}.stat:after{content:"";position:absolute;width:120px;height:120px;right:-65px;bottom:-70px;border-radius:50%;background:rgba(255,157,46,.09);filter:blur(13px)}.stat-top{display:flex;justify-content:space-between;align-items:center}.stat-title{font-size:9px;letter-spacing:1.8px;color:#6f8298;font-weight:800}.stat-icon{font-size:17px;opacity:.85}.stat-value{font-family:"Space Grotesk";font-size:31px;font-weight:700;margin-top:15px;letter-spacing:-1px}.stat-sub{font-size:9px;color:#5d7087;margin-top:5px}
-.workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.72fr);gap:18px}.panel{border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(11,22,35,.94),rgba(5,11,18,.97));box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.panel-head h3{margin:0;font-family:"Space Grotesk";font-size:15px}.panel-head p{margin:5px 0 0;color:#60748a;font-size:9px}.tag{padding:7px 11px;border-radius:999px;border:1px solid rgba(72,201,255,.2);background:rgba(72,201,255,.045);color:var(--cyan);font-size:8px;font-weight:800;letter-spacing:1px}
-.viewer{padding:19px}.drop{height:470px;position:relative;display:grid;place-items:center;border:1px dashed #294056;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(41,116,157,.13),transparent 42%),linear-gradient(145deg,#07111c,#050b12);cursor:pointer;transition:.3s}.drop:hover,.drop.drag{border-color:rgba(255,157,46,.75);box-shadow:inset 0 0 100px rgba(255,157,46,.045),0 0 35px rgba(255,157,46,.05)}.drop:before,.drop:after{content:"";position:absolute;width:38px;height:38px;border-color:rgba(255,157,46,.65);pointer-events:none}.drop:before{top:18px;left:18px;border-top:2px solid;border-left:2px solid}.drop:after{right:18px;bottom:18px;border-right:2px solid;border-bottom:2px solid}.scan{position:absolute;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 18px rgba(72,201,255,.55);opacity:0;pointer-events:none}.drop.has-image .scan{opacity:.45;animation:scan 3.2s linear infinite}@keyframes scan{0%{top:10%}100%{top:90%}}#preview{display:none;max-width:100%;max-height:100%;object-fit:contain;position:relative;z-index:2}.drop.has-image #preview{display:block}.drop.has-image .empty{display:none}.empty{text-align:center;position:relative;z-index:3}.upload-icon{width:74px;height:74px;margin:auto;display:grid;place-items:center;border-radius:22px;border:1px solid rgba(255,157,46,.26);background:linear-gradient(145deg,rgba(255,157,46,.09),rgba(72,201,255,.04));font-size:27px;box-shadow:0 12px 35px rgba(0,0,0,.25)}.empty h3{font-family:"Space Grotesk";font-size:16px;margin:17px 0 6px}.empty p{font-size:10px;color:#657990;margin:0}.empty strong{color:#b9c7d7}.controls{display:flex;gap:10px;margin-top:14px}.btn{border:1px solid var(--line);background:#0c1724;color:#cdd9e6;border-radius:12px;padding:12px 17px;font-size:11px;font-weight:800;cursor:pointer;transition:.22s}.btn:hover:not(:disabled){transform:translateY(-1px);border-color:#395169}.btn.primary{color:#101010;border-color:transparent;background:linear-gradient(135deg,#ffb44d,#ff721c);box-shadow:0 9px 28px rgba(255,112,28,.2)}.btn:disabled{opacity:.35;cursor:not-allowed}.file-meta{margin-top:10px;color:#5d7187;font-size:9px;min-height:14px}
-.result-panel{min-height:100%}.result-body{padding:18px}.decision{padding:17px;border-radius:17px;border:1px solid var(--line);background:linear-gradient(145deg,#0e1a28,#09121c)}.decision-row{display:flex;justify-content:space-between;gap:15px;align-items:start}.kicker{font-size:8px;color:#6d8298;letter-spacing:1.7px;font-weight:800}.decision h4{font-family:"Space Grotesk";font-size:18px;margin:7px 0 0}.decision-badge{padding:7px 9px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.8px;background:rgba(72,201,255,.07);color:var(--cyan);border:1px solid rgba(72,201,255,.18)}.decision-badge.danger{color:#ff8a98;background:rgba(255,82,104,.07);border-color:rgba(255,82,104,.2)}.decision-badge.review{color:var(--yellow);background:rgba(255,212,90,.07);border-color:rgba(255,212,90,.2)}.confidence{margin-top:18px}.confidence-head{display:flex;justify-content:space-between;color:#6f8297;font-size:9px}.confidence-head b{color:#dce7f4;font-size:11px}.bar{height:7px;border-radius:999px;background:#162436;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--orange),var(--green));transition:width .8s ease}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.info{padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.018)}.info span{display:block;color:#63778e;font-size:8px;letter-spacing:1.2px;font-weight:800}.info b{display:block;color:#e5edf6;font-size:12px;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.violations{margin-top:13px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.section-head span{font-size:9px;color:#63778e}.list{display:grid;gap:7px}.vitem{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-radius:12px;background:rgba(255,82,104,.055);border:1px solid rgba(255,82,104,.12);font-size:10px}.vitem b{color:#ff8795;font-size:9px}.empty-result{padding:22px 10px;text-align:center;color:#5d7187;font-size:10px}
-.preview-result{margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#050a10;display:none}.preview-result.show{display:block}.preview-result img{display:block;width:100%;max-height:340px;object-fit:contain}.result-caption{padding:9px 12px;color:#64798f;font-size:8px;letter-spacing:.5px}
-.loading{display:none;position:absolute;inset:0;z-index:10;place-items:center;background:rgba(5,10,16,.78);backdrop-filter:blur(6px)}.loading.show{display:grid}.loader{text-align:center}.ring{width:54px;height:54px;margin:auto;border-radius:50%;border:3px solid #1d3144;border-top-color:var(--saffron);border-right-color:var(--cyan);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loader b{display:block;font-family:"Space Grotesk";font-size:13px;margin-top:15px}.loader span{display:block;color:#657990;font-size:9px;margin-top:5px}
-.toast{position:fixed;right:22px;bottom:22px;z-index:100;padding:14px 17px;max-width:390px;border:1px solid #2a4057;border-radius:14px;background:#0d1926;box-shadow:var(--shadow);font-size:11px;display:none}.toast.show{display:block;animation:toast .25s ease}@keyframes toast{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
-.footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:18px 3px;color:#4f647b;font-size:9px;border-top:1px solid rgba(255,255,255,.05)}.footer strong{color:#d1dbe6}
-@media(max-width:1050px){.layout{grid-template-columns:1fr}aside{display:none}.stats{grid-template-columns:repeat(2,1fr)}.workspace{grid-template-columns:1fr}.drop{height:430px}}@media(max-width:620px){.top{height:70px;padding:0 15px}.brand small{display:none}.brand h1{font-size:18px}.online{font-size:9px;padding:9px}.main{padding:25px 14px}.hero{display:block}.hero h2{font-size:38px}.clock{margin-top:12px}.stats{grid-template-columns:1fr 1fr;gap:9px}.stat{padding:15px;min-height:112px}.stat-value{font-size:26px}.info-grid{grid-template-columns:1fr}.controls{flex-wrap:wrap}.btn{flex:1}.drop{height:340px}.footer{display:block;line-height:1.8}}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at 85% 5%,
+            rgba(255, 145, 40, 0.10),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 10% 70%,
+            rgba(0, 170, 255, 0.08),
+            transparent 28%
+        ),
+        #050a12;
+
+    color: #edf3fb;
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #050a12;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #26364a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #344b65;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    height: 86px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 34px;
+
+    background:
+        rgba(5, 10, 18, 0.92);
+
+    backdrop-filter: blur(18px);
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.07);
+
+    box-shadow:
+        0 15px 50px rgba(0,0,0,0.25);
+}
+
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.logo {
+    width: 56px;
+    height: 56px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,157,49,0.18),
+            rgba(255,157,49,0.03)
+        );
+
+    border:
+        1px solid rgba(255,157,49,0.40);
+
+    box-shadow:
+        0 0 30px rgba(255,145,40,0.08);
+
+    font-size: 27px;
+}
+
+
+.brand-title {
+    font-size: 25px;
+    font-weight: 850;
+    letter-spacing: -0.7px;
+}
+
+.brand-title span {
+    color: #ff941f;
+}
+
+.brand-subtitle {
+    margin-top: 4px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 2.2px;
+
+    color: #72849d;
+}
+
+
+.system-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 11px 17px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(19, 210, 113, 0.07);
+
+    border:
+        1px solid rgba(19, 210, 113, 0.25);
+
+    color: #58e99a;
+
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #25dc7b;
+
+    box-shadow:
+        0 0 12px rgba(37,220,123,0.8);
+
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%,100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: .45;
+        transform: scale(.75);
+    }
+}
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.app-layout {
+    display: grid;
+    grid-template-columns: 245px 1fr;
+    min-height: calc(100vh - 86px);
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+    padding: 30px 18px;
+
+    border-right:
+        1px solid rgba(255,255,255,0.06);
+
+    background:
+        rgba(5, 10, 18, 0.60);
+}
+
+.sidebar-label {
+    padding: 0 12px;
+    margin-bottom: 15px;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    color: #52657f;
+}
+
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.nav button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 14px 15px;
+
+    border: 1px solid transparent;
+    border-radius: 14px;
+
+    background: transparent;
+
+    color: #71839d;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        .25s ease;
+}
+
+.nav button:hover {
+    color: #dce7f5;
+
+    background:
+        rgba(255,255,255,0.035);
+
+    border-color:
+        rgba(255,255,255,0.05);
+}
+
+.nav button.active {
+    color: #ffb35c;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,145,40,0.13),
+            rgba(255,145,40,0.035)
+        );
+
+    border-color:
+        rgba(255,145,40,0.20);
+
+    box-shadow:
+        inset 3px 0 0 #ff941f;
+}
+
+.nav-icon {
+    width: 23px;
+
+    text-align: center;
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   AI ENGINE CARD
+========================================================= */
+
+.engine-card {
+    margin-top: 35px;
+
+    padding: 20px 16px;
+
+    border:
+        1px solid rgba(255,255,255,0.08);
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(19,31,47,0.78),
+            rgba(7,14,24,0.78)
+        );
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.18);
+}
+
+.engine-title {
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    color: #647995;
+
+    margin-bottom: 16px;
+}
+
+.engine {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px 0;
+
+    font-size: 12px;
+    color: #8ca0ba;
+}
+
+.ready {
+    color: #45e58f;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ready::before {
+    content: "";
+
+    display: inline-block;
+
+    width: 6px;
+    height: 6px;
+
+    margin-right: 7px;
+
+    border-radius: 50%;
+
+    background: #32df82;
+
+    box-shadow:
+        0 0 8px rgba(50,223,130,.7);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main {
+    padding: 42px;
+
+    max-width: 1500px;
+    width: 100%;
+
+    margin: auto;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    margin-bottom: 30px;
+}
+
+.hero h1 {
+    font-size: clamp(34px, 4vw, 48px);
+
+    line-height: 1;
+
+    letter-spacing: -1.8px;
+
+    font-weight: 900;
+}
+
+.hero h1 span {
+    color: #ff941f;
+}
+
+.hero p {
+    margin-top: 13px;
+
+    color: #71849d;
+
+    font-size: 14px;
+}
+
+.datetime {
+    color: #566a84;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   TOP STAT CARDS
+========================================================= */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 17px;
+
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    position: relative;
+
+    min-height: 145px;
+
+    padding: 22px 24px;
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(16,29,44,0.88),
+            rgba(7,14,24,0.92)
+        );
+
+    box-shadow:
+        0 18px 50px rgba(0,0,0,0.17);
+
+    transition:
+        transform .25s ease,
+        border-color .25s ease;
+}
+
+.stat-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 120px;
+    height: 120px;
+
+    right: -45px;
+    bottom: -60px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,145,40,0.07);
+
+    filter: blur(10px);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+
+    border-color:
+        rgba(255,145,40,0.25);
+}
+
+.stat-label {
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.8px;
+
+    color: #6d819a;
+}
+
+.stat-value {
+    margin-top: 17px;
+
+    font-size: 31px;
+
+    line-height: 1;
+
+    font-weight: 900;
+
+    letter-spacing: -1px;
+}
+
+.stat-note {
+    margin-top: 11px;
+
+    color: #53667e;
+
+    font-size: 11px;
+}
+
+.stat-icon {
+    position: absolute;
+
+    right: 21px;
+    top: 20px;
+
+    font-size: 21px;
+
+    opacity: .8;
+}
+
+
+/* =========================================================
+   WORKSPACE
+========================================================= */
+
+.workspace {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.7fr)
+        minmax(340px, .8fr);
+
+    gap: 22px;
+}
+
+
+.panel {
+    border:
+        1px solid rgba(255,255,255,0.08);
+
+    border-radius: 22px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13,27,42,0.92),
+            rgba(5,12,21,0.96)
+        );
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.20);
+}
+
+.panel-header {
+    min-height: 82px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 19px 24px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.07);
+}
+
+.panel-title {
+    font-size: 16px;
+    font-weight: 850;
+}
+
+.panel-subtitle {
+    margin-top: 5px;
+
+    color: #5f738d;
+
+    font-size: 11px;
+}
+
+.panel-tag {
+    padding: 8px 12px;
+
+    border-radius: 999px;
+
+    color: #65cfff;
+
+    border:
+        1px solid rgba(46,181,255,.20);
+
+    background:
+        rgba(46,181,255,.06);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: .7px;
+}
+
+
+/* =========================================================
+   UPLOAD AREA
+========================================================= */
+
+.upload-section {
+    padding: 20px 24px 25px;
+}
+
+.upload-area {
+    position: relative;
+
+    min-height: 430px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border:
+        1px dashed rgba(255,145,40,.28);
+
+    border-radius: 20px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(17,37,58,.28),
+            rgba(3,10,18,.75)
+        );
+
+    cursor: pointer;
+
+    transition:
+        .25s ease;
+}
+
+.upload-area:hover,
+.upload-area.dragging {
+    border-color:
+        rgba(255,145,40,.65);
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(255,145,40,.06),
+            rgba(3,10,18,.8)
+        );
+}
+
+.upload-area.has-image {
+    cursor: default;
+}
+
+.upload-corner {
+    position: absolute;
+
+    width: 22px;
+    height: 22px;
+
+    border-color: #ff941f;
+    border-style: solid;
+
+    opacity: .8;
+}
+
+.corner-tl {
+    left: 18px;
+    top: 18px;
+
+    border-width: 2px 0 0 2px;
+}
+
+.corner-tr {
+    right: 18px;
+    top: 18px;
+
+    border-width: 2px 2px 0 0;
+}
+
+.corner-bl {
+    left: 18px;
+    bottom: 18px;
+
+    border-width: 0 0 2px 2px;
+}
+
+.corner-br {
+    right: 18px;
+    bottom: 18px;
+
+    border-width: 0 2px 2px 0;
+}
+
+.upload-content {
+    text-align: center;
+
+    padding: 35px;
+}
+
+.upload-icon {
+    width: 76px;
+    height: 76px;
+
+    margin: auto auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 22px;
+
+    background:
+        rgba(255,145,40,.08);
+
+    border:
+        1px solid rgba(255,145,40,.18);
+
+    font-size: 30px;
+}
+
+.upload-content h3 {
+    font-size: 18px;
+
+    font-weight: 850;
+}
+
+.upload-content p {
+    margin-top: 8px;
+
+    color: #60758f;
+
+    font-size: 12px;
+}
+
+.upload-hint {
+    margin-top: 13px !important;
+
+    font-size: 10px !important;
+
+    color: #455a73 !important;
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+.preview {
+    display: none;
+
+    position: absolute;
+
+    inset: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #030912;
+}
+
+.preview.show {
+    display: flex;
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    padding: 10px;
+}
+
+.remove-btn {
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    background:
+        rgba(5,10,18,.85);
+
+    color: #fff;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    z-index: 5;
+}
+
+.remove-btn:hover {
+    background: #b52c2c;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.controls {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+.btn {
+    height: 48px;
+
+    padding: 0 21px;
+
+    border-radius: 14px;
+
+    border:
+        1px solid rgba(255,255,255,.09);
+
+    background:
+        rgba(13,25,39,.9);
+
+    color: #b8c7d9;
+
+    font-weight: 800;
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+
+    border-color:
+        rgba(255,255,255,.18);
+
+    color: #fff;
+}
+
+.btn-primary {
+    flex: 1;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffad42,
+            #ff7719
+        );
+
+    border-color:
+        rgba(255,173,66,.5);
+
+    color: #111;
+
+    box-shadow:
+        0 12px 30px rgba(255,120,20,.17);
+}
+
+.btn-primary:hover {
+    box-shadow:
+        0 15px 38px rgba(255,120,20,.28);
+}
+
+.btn-primary:disabled {
+    opacity: .4;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   FILE INFO
+========================================================= */
+
+.file-info {
+    margin-top: 10px;
+
+    min-height: 17px;
+
+    color: #526982;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loading {
+    display: none;
+
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 12px;
+
+    color: #ffb35c;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.loading.show {
+    display: flex;
+}
+
+.spinner {
+    width: 15px;
+    height: 15px;
+
+    border-radius: 50%;
+
+    border:
+        2px solid rgba(255,255,255,.12);
+
+    border-top-color:
+        #ff941f;
+
+    animation:
+        spin .8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   RESULTS PANEL
+========================================================= */
+
+.results-body {
+    padding: 20px;
+}
+
+.result-status {
+    padding: 18px;
+
+    border:
+        1px solid rgba(255,255,255,.07);
+
+    border-radius: 17px;
+
+    background:
+        rgba(255,255,255,.025);
+
+    margin-bottom: 14px;
+}
+
+.result-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.result-label {
+    font-size: 9px;
+
+    letter-spacing: 1.5px;
+
+    color: #607590;
+
+    font-weight: 800;
+}
+
+.result-main {
+    margin-top: 7px;
+
+    font-size: 19px;
+
+    font-weight: 900;
+}
+
+.badge {
+    padding: 7px 10px;
+
+    border-radius: 9px;
+
+    font-size: 9px;
+
+    font-weight: 900;
+
+    letter-spacing: .7px;
+
+    background:
+        rgba(33,181,255,.08);
+
+    color: #5ecfff;
+
+    border:
+        1px solid rgba(33,181,255,.20);
+}
+
+.badge.detected {
+    color: #ff9a43;
+
+    background:
+        rgba(255,145,40,.09);
+
+    border-color:
+        rgba(255,145,40,.25);
+}
+
+.badge.review {
+    color: #ffd15c;
+
+    background:
+        rgba(255,205,70,.08);
+
+    border-color:
+        rgba(255,205,70,.22);
+}
+
+.badge.safe {
+    color: #48e993;
+
+    background:
+        rgba(30,220,120,.07);
+
+    border-color:
+        rgba(30,220,120,.20);
+}
+
+
+/* =========================================================
+   CONFIDENCE
+========================================================= */
+
+.confidence {
+    margin-top: 17px;
+}
+
+.conf-header {
+    display: flex;
+    justify-content: space-between;
+
+    color: #71849c;
+
+    font-size: 10px;
+}
+
+.conf-header strong {
+    color: #d9e5f2;
+}
+
+.progress {
+    height: 7px;
+
+    margin-top: 9px;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background:
+        #142337;
+}
+
+.progress-bar {
+    width: 0%;
+
+    height: 100%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff7519,
+            #ffc45c
+        );
+
+    transition:
+        width .7s ease;
+}
+
+
+/* =========================================================
+   RESULT GRID
+========================================================= */
+
+.result-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.result-box {
+    min-height: 88px;
+
+    padding: 15px;
+
+    border:
+        1px solid rgba(255,255,255,.07);
+
+    border-radius: 15px;
+
+    background:
+        rgba(255,255,255,.022);
+}
+
+.box-label {
+    font-size: 9px;
+
+    letter-spacing: 1.2px;
+
+    font-weight: 800;
+
+    color: #5f748e;
+}
+
+.box-value {
+    margin-top: 9px;
+
+    font-size: 15px;
+
+    font-weight: 850;
+
+    color: #dce8f5;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   VIOLATIONS SINGLE BOX
+========================================================= */
+
+.violation-box {
+    padding: 17px;
+
+    border:
+        1px solid rgba(255,255,255,.07);
+
+    border-radius: 16px;
+
+    background:
+        rgba(255,255,255,.02);
+}
+
+.violation-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 13px;
+}
+
+.violation-title {
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+
+    color: #71849c;
+}
+
+.violation-count {
+    color: #5d7895;
+
+    font-size: 10px;
+}
+
+.violation-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-height: 210px;
+
+    overflow-y: auto;
+}
+
+.violation-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 11px 12px;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,105,35,.055);
+
+    border:
+        1px solid rgba(255,120,40,.10);
+}
+
+.violation-name {
+    color: #ffb06b;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+.violation-confidence {
+    color: #91a3b9;
+
+    font-size: 10px;
+}
+
+.empty-result {
+    padding: 18px;
+
+    text-align: center;
+
+    color: #526983;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   ANNOTATED IMAGE
+========================================================= */
+
+.result-image-wrapper {
+    display: none;
+
+    margin-top: 15px;
+
+    padding: 10px;
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius: 17px;
+
+    background:
+        #030a12;
+}
+
+.result-image-wrapper.show {
+    display: block;
+}
+
+.result-image-wrapper img {
+    width: 100%;
+
+    max-height: 400px;
+
+    object-fit: contain;
+
+    display: block;
+
+    border-radius: 11px;
+}
+
+.result-image-title {
+    padding: 7px 5px 12px;
+
+    color: #71849c;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+}
+
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+.pipeline {
+    margin-top: 25px;
+
+    padding: 28px;
+
+    border:
+        1px solid rgba(255,255,255,.07);
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(12,25,40,.80),
+            rgba(5,12,20,.85)
+        );
+}
+
+.pipeline-heading {
+    font-size: 19px;
+
+    font-weight: 850;
+}
+
+.pipeline-subtitle {
+    margin-top: 6px;
+
+    color: #5f738c;
+
+    font-size: 11px;
+}
+
+.pipeline-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 12px;
+
+    margin-top: 22px;
+}
+
+.pipeline-card {
+    position: relative;
+
+    padding: 19px;
+
+    min-height: 150px;
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    border-radius: 16px;
+
+    background:
+        rgba(255,255,255,.018);
+
+    transition: .25s ease;
+}
+
+.pipeline-card:hover {
+    transform: translateY(-4px);
+
+    border-color:
+        rgba(255,145,40,.20);
+
+    background:
+        rgba(255,145,40,.035);
+}
+
+.pipeline-icon {
+    font-size: 22px;
+
+    margin-bottom: 14px;
+}
+
+.pipeline-card h3 {
+    font-size: 13px;
+
+    font-weight: 850;
+}
+
+.pipeline-card p {
+    margin-top: 7px;
+
+    color: #5d7189;
+
+    font-size: 10px;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+    position: fixed;
+
+    left: 50%;
+    bottom: 28px;
+
+    transform:
+        translate(-50%, 30px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 2000;
+
+    padding: 13px 18px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(15,25,38,.96);
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.35);
+
+    color: #d9e7f5;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    transition: .3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+
+    transform:
+        translate(-50%, 0);
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 28px;
+
+    padding: 18px 3px;
+
+    border-top:
+        1px solid rgba(255,255,255,.06);
+
+    color: #42566e;
+
+    font-size: 10px;
+
+    letter-spacing: .3px;
+}
+
+.footer strong {
+    color: #8da0b7;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+    .stats {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .workspace {
+        grid-template-columns:
+            1fr;
+    }
+
+    .pipeline-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+}
+
+
+@media (max-width: 850px) {
+
+    .header {
+        padding: 0 18px;
+    }
+
+    .brand-subtitle {
+        display: none;
+    }
+
+    .app-layout {
+        grid-template-columns:
+            1fr;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        padding: 25px 18px;
+    }
+
+    .hero {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .datetime {
+        display: none;
+    }
+
+    .pipeline-grid {
+        grid-template-columns:
+            1fr 1fr;
+    }
+}
+
+
+@media (max-width: 550px) {
+
+    .system-status {
+        padding: 9px 11px;
+    }
+
+    .system-status span:last-child {
+        display: none;
+    }
+
+    .brand-title {
+        font-size: 20px;
+    }
+
+    .logo {
+        width: 45px;
+        height: 45px;
+        font-size: 22px;
+    }
+
+    .stats {
+        grid-template-columns:
+            1fr;
+    }
+
+    .controls {
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .result-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .pipeline-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .upload-area {
+        min-height: 350px;
+    }
+
+    .footer {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+}
+
 </style>
 </head>
+
+
 <body>
-<header class="top">
-  <div class="brand"><div class="logo">🚦</div><div><h1>TRAFFIC<span>GUARD</span> AI</h1><small>INTELLIGENT ROAD SAFETY PLATFORM</small></div></div>
-  <div class="online"><span class="pulse"></span><span id="systemText">SYSTEM ONLINE</span></div>
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="header">
+
+    <div class="brand">
+
+        <div class="logo">
+            🚦
+        </div>
+
+        <div>
+            <div class="brand-title">
+                TRAFFIC<span>GUARD</span> AI
+            </div>
+
+            <div class="brand-subtitle">
+                INTELLIGENT ROAD SAFETY PLATFORM
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="system-status">
+
+        <span class="status-dot"></span>
+
+        <span>SYSTEM ONLINE</span>
+
+    </div>
+
 </header>
 
-<div class="layout">
-<aside>
-  <div class="label">COMMAND CENTER</div>
-  <nav class="nav">
-    <button class="active" onclick="nav(this,'overview')">◉ &nbsp; Overview</button>
-    <button onclick="nav(this,'detection')">◇ &nbsp; AI Detection</button>
-    <button onclick="nav(this,'evidence')">▣ &nbsp; Evidence</button>
-    <button onclick="nav(this,'review')">✓ &nbsp; Human Review</button>
-    <button onclick="nav(this,'analytics')">◫ &nbsp; Analytics</button>
-  </nav>
-  <div class="engine-box">
-    <div class="label">AI ENGINES</div>
-    <div class="engine">25-Class YOLO <span class="ready">● READY</span></div>
-    <div class="engine">Helmet Model <span class="ready">● READY</span></div>
-    <div class="engine">Plate + OCR <span id="plateReady" class="ready">● READY</span></div>
-  </div>
-  <div class="author">SYSTEM ARCHITECT<br><b>Karthik Kumar</b><br>🇮🇳 Built for Indian road-safety analysis</div>
-</aside>
 
-<main>
-<section class="hero">
-  <div><div class="eyebrow">🇮🇳 INDIA • COMPUTER VISION • ROAD SAFETY</div><h2>Traffic Intelligence</h2><p>Detect violations. Read plates. Measure confidence. Escalate uncertainty.</p></div>
-  <div class="clock" id="clock"></div>
-</section>
 
-<section class="stats">
-  <div class="stat"><div class="stat-top"><span class="stat-title">VIOLATIONS</span><span class="stat-icon">⚠️</span></div><div class="stat-value" id="violations">00</div><div class="stat-sub">Current analysis</div></div>
-  <div class="stat"><div class="stat-top"><span class="stat-title">HELMET STATUS</span><span class="stat-icon">🪖</span></div><div class="stat-value" id="helmet">—</div><div class="stat-sub">Specialized AI model</div></div>
-  <div class="stat"><div class="stat-top"><span class="stat-title">LICENSE PLATE</span><span class="stat-icon">▣</span></div><div class="stat-value" id="plate">—</div><div class="stat-sub">Detection + OCR</div></div>
-  <div class="stat"><div class="stat-top"><span class="stat-title">CONFIDENCE</span><span class="stat-icon">◉</span></div><div class="stat-value" id="confidence">—</div><div class="stat-sub">Decision confidence</div></div>
-</section>
+<!-- =========================================================
+     APP LAYOUT
+========================================================= -->
 
-<section class="workspace" id="detection">
-<div class="panel">
-  <div class="panel-head"><div><h3>Live Analysis</h3><p>Computer-vision inspection workspace</p></div><span class="tag">YOLO + OCR PIPELINE</span></div>
-  <div class="viewer">
-    <div class="drop" id="drop">
-      <div class="scan"></div>
-      <input id="file" type="file" accept="image/*" hidden>
-      <img id="preview" alt="Selected traffic image">
-      <div class="empty"><div class="upload-icon">↑</div><h3>Drop traffic image here</h3><p>or <strong>click to browse</strong> • JPG, PNG, WEBP • max 12 MB</p></div>
-      <div class="loading" id="loading"><div class="loader"><div class="ring"></div><b>Analysing traffic scene</b><span>Running 25-class YOLO → Helmet → Plate → OCR</span></div></div>
-    </div>
-    <div class="controls"><button class="btn" id="choose">Choose Image</button><button class="btn primary" id="analyse" disabled>⚡ Analyse Traffic</button><button class="btn" id="clear">Clear</button></div>
-    <div class="file-meta" id="fileMeta"></div>
-    <div class="preview-result" id="resultImageWrap"><img id="resultImage" alt="Annotated detection result"><div class="result-caption">ANNOTATED AI OUTPUT • BOUNDING BOXES & DETECTIONS</div></div>
-  </div>
+<div class="app-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-label">
+            COMMAND CENTER
+        </div>
+
+
+        <nav class="nav">
+
+            <button
+                class="active"
+                onclick="scrollToSection('overview', this)"
+            >
+                <span class="nav-icon">◉</span>
+                Overview
+            </button>
+
+
+            <button
+                onclick="scrollToSection('analysis', this)"
+            >
+                <span class="nav-icon">◇</span>
+                Detection
+            </button>
+
+
+            <button
+                onclick="scrollToSection('resultsPanel', this)"
+            >
+                <span class="nav-icon">□</span>
+                Evidence
+            </button>
+
+
+            <button
+                onclick="scrollToSection('review', this)"
+            >
+                <span class="nav-icon">✓</span>
+                Human Review
+            </button>
+
+
+            <button
+                onclick="scrollToSection('pipeline', this)"
+            >
+                <span class="nav-icon">▥</span>
+                Analytics
+            </button>
+
+        </nav>
+
+
+
+        <!-- AI ENGINES -->
+
+        <div class="engine-card">
+
+            <div class="engine-title">
+                AI ENGINES
+            </div>
+
+
+            <div class="engine">
+                <span>25-Class YOLO</span>
+                <span class="ready">READY</span>
+            </div>
+
+
+            <div class="engine">
+                <span>Helmet Model</span>
+                <span class="ready">READY</span>
+            </div>
+
+
+            <div class="engine">
+                <span>OCR Engine</span>
+                <span class="ready">READY</span>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             HERO
+        ================================================== -->
+
+        <section
+            id="overview"
+            class="hero"
+        >
+
+            <div>
+
+                <h1>
+                    Traffic <span>Intelligence</span>
+                </h1>
+
+                <p>
+                    AI-powered road safety and traffic violation analysis
+                </p>
+
+            </div>
+
+
+            <div
+                class="datetime"
+                id="datetime"
+            >
+                Loading system time...
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             STAT CARDS
+        ================================================== -->
+
+        <section class="stats">
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    VIOLATIONS
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statViolations"
+                >
+                    00
+                </div>
+
+                <div class="stat-note">
+                    Current analysis
+                </div>
+
+                <div class="stat-icon">
+                    🚨
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    HELMET STATUS
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statHelmet"
+                >
+                    —
+                </div>
+
+                <div class="stat-note">
+                    AI classification
+                </div>
+
+                <div class="stat-icon">
+                    🪖
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    LICENSE PLATE
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statPlate"
+                >
+                    —
+                </div>
+
+                <div class="stat-note">
+                    OCR recognition
+                </div>
+
+                <div class="stat-icon">
+                    ▣
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    CONFIDENCE
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statConfidence"
+                >
+                    —
+                </div>
+
+                <div class="stat-note">
+                    Detection confidence
+                </div>
+
+                <div class="stat-icon">
+                    ◎
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             WORKSPACE
+        ================================================== -->
+
+        <section
+            id="analysis"
+            class="workspace"
+        >
+
+
+            <!-- =============================================
+                 LIVE ANALYSIS
+            ============================================== -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="panel-title">
+                            Live Analysis
+                        </div>
+
+                        <div class="panel-subtitle">
+                            Computer vision inspection workspace
+                        </div>
+
+                    </div>
+
+                    <div class="panel-tag">
+                        AI VISION
+                    </div>
+
+                </div>
+
+
+
+                <div class="upload-section">
+
+
+                    <!-- UPLOAD AREA -->
+
+                    <div
+                        class="upload-area"
+                        id="uploadArea"
+                    >
+
+                        <div class="upload-corner corner-tl"></div>
+                        <div class="upload-corner corner-tr"></div>
+                        <div class="upload-corner corner-bl"></div>
+                        <div class="upload-corner corner-br"></div>
+
+
+                        <input
+                            type="file"
+                            id="imageInput"
+                            accept="image/png,image/jpeg,image/jpg,image/webp"
+                            hidden
+                        >
+
+
+                        <div
+                            class="upload-content"
+                            id="uploadContent"
+                        >
+
+                            <div class="upload-icon">
+                                📷
+                            </div>
+
+                            <h3>
+                                Upload Traffic Image
+                            </h3>
+
+                            <p>
+                                Click here or drag & drop an image
+                            </p>
+
+                            <p class="upload-hint">
+                                JPG • JPEG • PNG • WEBP • MAX 12 MB
+                            </p>
+
+                        </div>
+
+
+
+                        <!-- PREVIEW -->
+
+                        <div
+                            class="preview"
+                            id="preview"
+                        >
+
+                            <img
+                                id="previewImage"
+                                alt="Selected traffic image"
+                            >
+
+                            <button
+                                class="remove-btn"
+                                id="removeImage"
+                                type="button"
+                            >
+                                ✕
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CONTROLS -->
+
+                    <div class="controls">
+
+                        <button
+                            class="btn"
+                            id="chooseButton"
+                            type="button"
+                        >
+                            Choose Image
+                        </button>
+
+
+                        <button
+                            class="btn btn-primary"
+                            id="analyseButton"
+                            type="button"
+                            disabled
+                        >
+                            ⚡ Analyse Traffic
+                        </button>
+
+
+                        <button
+                            class="btn"
+                            id="clearButton"
+                            type="button"
+                        >
+                            Clear
+                        </button>
+
+                    </div>
+
+
+
+                    <div
+                        class="file-info"
+                        id="fileInfo"
+                    ></div>
+
+
+
+                    <!-- LOADING -->
+
+                    <div
+                        class="loading"
+                        id="loading"
+                    >
+
+                        <div class="spinner"></div>
+
+                        <span>
+                            Running 25-Class YOLO + Helmet AI + OCR...
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 RESULTS
+            ============================================== -->
+
+            <div
+                class="panel"
+                id="resultsPanel"
+            >
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="panel-title">
+                            Detection Results
+                        </div>
+
+                        <div class="panel-subtitle">
+                            AI decision intelligence
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="panel-tag"
+                        id="resultTag"
+                    >
+                        WAITING
+                    </div>
+
+                </div>
+
+
+
+                <div class="results-body">
+
+
+                    <!-- STATUS -->
+
+                    <div class="result-status">
+
+                        <div class="result-top">
+
+                            <div>
+
+                                <div class="result-label">
+                                    ANALYSIS STATUS
+                                </div>
+
+                                <div
+                                    class="result-main"
+                                    id="resultStatus"
+                                >
+                                    Waiting for image
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="badge"
+                                id="decisionBadge"
+                            >
+                                READY
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="confidence">
+
+                            <div class="conf-header">
+
+                                <span>
+                                    OVERALL CONFIDENCE
+                                </span>
+
+                                <strong
+                                    id="confidenceText"
+                                >
+                                    0%
+                                </strong>
+
+                            </div>
+
+
+                            <div class="progress">
+
+                                <div
+                                    class="progress-bar"
+                                    id="confidenceBar"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- RESULT GRID -->
+
+                    <div class="result-grid">
+
+
+                        <div class="result-box">
+
+                            <div class="box-label">
+                                VIOLATION TYPE
+                            </div>
+
+                            <div
+                                class="box-value"
+                                id="detailViolation"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="result-box">
+
+                            <div class="box-label">
+                                NUMBER PLATE
+                            </div>
+
+                            <div
+                                class="box-value"
+                                id="detailPlate"
+                            >
+                                Not detected
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="result-box">
+
+                            <div class="box-label">
+                                OCR CONFIDENCE
+                            </div>
+
+                            <div
+                                class="box-value"
+                                id="detailOCR"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="result-box">
+
+                            <div class="box-label">
+                                PLATE CONFIDENCE
+                            </div>
+
+                            <div
+                                class="box-value"
+                                id="detailPlateConfidence"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ALL VIOLATIONS IN ONE BOX -->
+
+                    <div class="violation-box">
+
+                        <div class="violation-header">
+
+                            <div class="violation-title">
+                                DETECTED VIOLATIONS
+                            </div>
+
+                            <div
+                                class="violation-count"
+                                id="violationCount"
+                            >
+                                0 cases
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="violation-list"
+                            id="violationList"
+                        >
+
+                            <div class="empty-result">
+                                Upload an image to begin AI analysis.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ANNOTATED RESULT -->
+
+                    <div
+                        class="result-image-wrapper"
+                        id="resultImageWrapper"
+                    >
+
+                        <div class="result-image-title">
+                            AI ANNOTATED EVIDENCE
+                        </div>
+
+                        <img
+                            id="resultImage"
+                            alt="AI annotated traffic detection result"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             HUMAN REVIEW
+        ================================================== -->
+
+        <section
+            id="review"
+            class="pipeline"
+            style="margin-top:22px;"
+        >
+
+            <div class="pipeline-heading">
+                Human-in-the-Loop Review
+            </div>
+
+            <div class="pipeline-subtitle">
+                AI assists decision-making when predictions are uncertain.
+            </div>
+
+
+            <div
+                style="
+                    margin-top:18px;
+                    padding:17px;
+                    border:1px solid rgba(255,205,70,.12);
+                    border-radius:15px;
+                    background:rgba(255,205,70,.025);
+                    color:#71849c;
+                    font-size:11px;
+                    line-height:1.7;
+                "
+            >
+
+                <strong
+                    style="color:#dce6f2;"
+                >
+                    AI Prediction →
+                    Confidence Analysis →
+                    Final Decision
+                </strong>
+
+                <br><br>
+
+                High-confidence cases can be marked
+                <strong style="color:#ff9e4d;">
+                    DETECTED
+                </strong>.
+
+                Low-confidence cases can be routed to
+                <strong style="color:#ffd15c;">
+                    HUMAN REVIEW
+                </strong>.
+
+                Cases without a target violation can be marked
+                <strong style="color:#55e99b;">
+                    NOT DETECTED
+                </strong>.
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             PIPELINE
+        ================================================== -->
+
+        <section
+            id="pipeline"
+            class="pipeline"
+        >
+
+            <div class="pipeline-heading">
+                How TrafficGuard AI Works
+            </div>
+
+            <div class="pipeline-subtitle">
+                Multi-stage intelligent traffic analysis
+            </div>
+
+
+            <div class="pipeline-grid">
+
+
+                <div class="pipeline-card">
+
+                    <div class="pipeline-icon">
+                        📷
+                    </div>
+
+                    <h3>
+                        Upload
+                    </h3>
+
+                    <p>
+                        Traffic image enters the AI inspection system.
+                    </p>
+
+                </div>
+
+
+
+                <div class="pipeline-card">
+
+                    <div class="pipeline-icon">
+                        🧠
+                    </div>
+
+                    <h3>
+                        25-Class YOLO
+                    </h3>
+
+                    <p>
+                        Detects supported traffic objects and violation classes.
+                    </p>
+
+                </div>
+
+
+
+                <div class="pipeline-card">
+
+                    <div class="pipeline-icon">
+                        🪖
+                    </div>
+
+                    <h3>
+                        Helmet AI
+                    </h3>
+
+                    <p>
+                        Performs specialized helmet classification.
+                    </p>
+
+                </div>
+
+
+
+                <div class="pipeline-card">
+
+                    <div class="pipeline-icon">
+                        🚘
+                    </div>
+
+                    <h3>
+                        Plate Detection
+                    </h3>
+
+                    <p>
+                        Identifies the vehicle registration plate when available.
+                    </p>
+
+                </div>
+
+
+
+                <div class="pipeline-card">
+
+                    <div class="pipeline-icon">
+                        🔤
+                    </div>
+
+                    <h3>
+                        OCR
+                    </h3>
+
+                    <p>
+                        Extracts the registration number from the detected plate.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <footer class="footer">
+
+            <div>
+                🇮🇳 TRAFFICGUARD AI
+                • ROAD SAFETY INTELLIGENCE
+            </div>
+
+            <div>
+                Designed & Developed by
+                <strong>
+                    Karthik Kumar
+                </strong>
+            </div>
+
+        </footer>
+
+
+    </main>
+
 </div>
 
-<div class="panel result-panel" id="overview">
-  <div class="panel-head"><div><h3>Decision Intelligence</h3><p>Confidence-aware analysis</p></div><span class="tag" id="decisionTag">WAITING</span></div>
-  <div class="result-body">
-    <div class="decision"><div class="decision-row"><div><div class="kicker">ANALYSIS STATUS</div><h4 id="status">Waiting for image</h4></div><div class="decision-badge" id="badge">READY</div></div><div class="confidence"><div class="confidence-head"><span>OVERALL CONFIDENCE</span><b id="confText">0%</b></div><div class="bar"><i id="bar"></i></div></div></div>
-    <div class="info-grid">
-      <div class="info"><span>VIOLATION TYPE</span><b id="detailViolations">—</b></div>
-      <div class="info"><span>NUMBER PLATE</span><b id="detailPlate">Not detected</b></div>
-      <div class="info"><span>OCR CONFIDENCE</span><b id="ocrConf">—</b></div>
-      <div class="info"><span>PLATE CONFIDENCE</span><b id="plateConf">—</b></div>
-    </div>
-    <div class="violations"><div class="section-head"><div class="label">DETECTED VIOLATIONS</div><span id="violationCount">0 cases</span></div><div class="list" id="list"><div class="empty-result">Upload an image to begin AI analysis.</div></div></div>
-  </div>
-</div>
-</section>
 
-<footer class="footer"><span>TRAFFICGUARD AI • ROAD SAFETY INTELLIGENCE</span><span>Designed &amp; Developed by <strong>Karthik Kumar</strong> 🇮🇳</span></footer>
-</main></div>
-<div class="toast" id="toast"></div>
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+
 
 <script>
-const $=id=>document.getElementById(id);
-let selectedFile=null;
-const drop=$('drop'),file=$('file'),preview=$('preview');
-function clock(){const d=new Date();$('clock').textContent=d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).toUpperCase();}clock();setInterval(clock,1000);
-function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.remove('show'),3200)}
-function nav(btn,target){document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(target==='detection')document.querySelector('#detection').scrollIntoView({behavior:'smooth'});else if(target==='overview')document.querySelector('#overview').scrollIntoView({behavior:'smooth'});else toast(target.toUpperCase()+' MODULE • Ready for integration');}
-$('choose').onclick=()=>file.click();drop.onclick=e=>{if(e.target.closest('.loading'))return;file.click()};
-['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
-drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0])});file.addEventListener('change',()=>{if(file.files[0])setFile(file.files[0])});
-function setFile(f){if(!f.type.startsWith('image/'))return toast('Please select an image file.');if(f.size>12*1024*1024)return toast('Image is larger than the 12 MB limit.');selectedFile=f;preview.src=URL.createObjectURL(f);drop.classList.add('has-image');$('analyse').disabled=false;$('fileMeta').textContent=`${f.name}  •  ${(f.size/1024/1024).toFixed(2)} MB  •  READY FOR ANALYSIS`;toast('Traffic image loaded successfully.');}
-$('clear').onclick=()=>{selectedFile=null;file.value='';preview.removeAttribute('src');drop.classList.remove('has-image');$('analyse').disabled=true;$('fileMeta').textContent='';$('resultImageWrap').classList.remove('show');resetResults();toast('Analysis workspace cleared.');};
-function resetResults(){$('violations').textContent='00';$('helmet').textContent='—';$('plate').textContent='—';$('confidence').textContent='—';$('status').textContent='Waiting for image';$('decisionTag').textContent='WAITING';$('badge').textContent='READY';$('badge').className='decision-badge';$('confText').textContent='0%';$('bar').style.width='0%';$('detailViolations').textContent='—';$('detailPlate').textContent='Not detected';$('ocrConf').textContent='—';$('plateConf').textContent='—';$('violationCount').textContent='0 cases';$('list').innerHTML='<div class="empty-result">Upload an image to begin AI analysis.</div>';}
-function pct(v){let n=Number(v||0);if(n<=1)n*=100;return Math.max(0,Math.min(100,n));}
-function formatName(s){return String(s||'Unknown').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());}
-$('analyse').onclick=async()=>{if(!selectedFile)return toast('Choose a traffic image first.');const fd=new FormData();fd.append('image',selectedFile);$('loading').classList.add('show');$('analyse').disabled=true;$('choose').disabled=true;try{const r=await fetch('/api/analyze',{method:'POST',body:fd});let data={};try{data=await r.json()}catch{throw new Error('Server returned an invalid response.')}if(!r.ok)throw new Error(data.error||'Detection request failed.');render(data);}catch(err){console.error(err);toast(err.message||'Detection failed. Check the Python backend.');}finally{$('loading').classList.remove('show');$('analyse').disabled=false;$('choose').disabled=false;}};
-function render(d){const vs=Array.isArray(d.violations)?d.violations:[];const confidence=pct(d.overall_confidence);const decision=d.decision||'NOT_DETECTED';$('violations').textContent=String(vs.length).padStart(2,'0');$('helmet').textContent=d.helmet_status||'Not detected';$('plate').textContent=d.plate_text||'—';$('confidence').textContent=confidence.toFixed(1)+'%';$('confText').textContent=confidence.toFixed(1)+'%';setTimeout(()=>$('bar').style.width=confidence+'%',80);$('detailViolations').textContent=vs.length?vs.map(v=>formatName(v.type)).join(', '):'None';$('detailPlate').textContent=d.plate_text||'Not detected';$('ocrConf').textContent=d.ocr_confidence!=null?pct(d.ocr_confidence).toFixed(1)+'%':'—';$('plateConf').textContent=d.plate_confidence!=null?pct(d.plate_confidence).toFixed(1)+'%':'—';$('violationCount').textContent=vs.length+' case'+(vs.length===1?'':'s');
-const status=decision==='HUMAN_REVIEW'?'Human review required':decision==='DETECTED'?'Violation detected':'No target violation detected';$('status').textContent=status;$('decisionTag').textContent=decision.replaceAll('_',' ');$('badge').textContent=decision==='HUMAN_REVIEW'?'REVIEW':decision==='DETECTED'?'ALERT':'CLEAR';$('badge').className='decision-badge '+(decision==='HUMAN_REVIEW'?'review':decision==='DETECTED'?'danger':'');
-$('list').innerHTML=vs.length?vs.map(v=>`<div class="vitem"><span>⚠ ${formatName(v.type)}</span><b>${pct(v.confidence).toFixed(1)}%</b></div>`).join(''):'<div class="empty-result">✓ No target violations detected.</div>';
-if(d.annotated_image){$('resultImage').src='data:image/jpeg;base64,'+d.annotated_image;$('resultImageWrap').classList.add('show');}toast(decision==='HUMAN_REVIEW'?'Low-confidence case sent for human review.':decision==='DETECTED'?'Violation analysis completed.':'Analysis completed — no target violation detected.');document.querySelector('#overview').scrollIntoView({behavior:'smooth',block:'start'});}
-fetch('/api/health').then(r=>r.json()).then(h=>{if(h.plate_model===false||h.ocr===false)$('plateReady').textContent='● OPTIONAL';}).catch(()=>{$('systemText').textContent='BACKEND OFFLINE';$('systemText').previousElementSibling.style.background='var(--red)';});
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const imageInput =
+    document.getElementById("imageInput");
+
+const uploadArea =
+    document.getElementById("uploadArea");
+
+const uploadContent =
+    document.getElementById("uploadContent");
+
+const preview =
+    document.getElementById("preview");
+
+const previewImage =
+    document.getElementById("previewImage");
+
+const chooseButton =
+    document.getElementById("chooseButton");
+
+const analyseButton =
+    document.getElementById("analyseButton");
+
+const clearButton =
+    document.getElementById("clearButton");
+
+const removeImage =
+    document.getElementById("removeImage");
+
+const loading =
+    document.getElementById("loading");
+
+const fileInfo =
+    document.getElementById("fileInfo");
+
+const toastElement =
+    document.getElementById("toast");
+
+const resultImageWrapper =
+    document.getElementById("resultImageWrapper");
+
+const resultImage =
+    document.getElementById("resultImage");
+
+
+let selectedFile = null;
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function toast(message) {
+
+    toastElement.textContent = message;
+
+    toastElement.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(() => {
+
+            toastElement.classList.remove("show");
+
+        }, 3000);
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function scrollToSection(id, button) {
+
+    document
+        .getElementById(id)
+        .scrollIntoView({
+            behavior: "smooth"
+        });
+
+    document
+        .querySelectorAll(".nav button")
+        .forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+    button.classList.add("active");
+}
+
+
+/* =========================================================
+   FILE SELECTION
+========================================================= */
+
+chooseButton.addEventListener(
+    "click",
+    () => imageInput.click()
+);
+
+
+uploadArea.addEventListener(
+    "click",
+    (event) => {
+
+        if (
+            event.target === removeImage ||
+            event.target.closest("#removeImage")
+        ) {
+            return;
+        }
+
+        if (!selectedFile) {
+            imageInput.click();
+        }
+
+    }
+);
+
+
+imageInput.addEventListener(
+    "change",
+    () => {
+
+        if (imageInput.files.length > 0) {
+
+            setSelectedFile(
+                imageInput.files[0]
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   DRAG & DROP
+========================================================= */
+
+[
+    "dragenter",
+    "dragover"
+].forEach(eventName => {
+
+    uploadArea.addEventListener(
+        eventName,
+        event => {
+
+            event.preventDefault();
+
+            uploadArea.classList.add(
+                "dragging"
+            );
+
+        }
+    );
+
+});
+
+
+[
+    "dragleave",
+    "drop"
+].forEach(eventName => {
+
+    uploadArea.addEventListener(
+        eventName,
+        event => {
+
+            event.preventDefault();
+
+            uploadArea.classList.remove(
+                "dragging"
+            );
+
+        }
+    );
+
+});
+
+
+uploadArea.addEventListener(
+    "drop",
+    event => {
+
+        const file =
+            event.dataTransfer.files[0];
+
+        if (file) {
+
+            setSelectedFile(file);
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SET SELECTED FILE
+========================================================= */
+
+function setSelectedFile(file) {
+
+    if (!file.type.startsWith("image/")) {
+
+        toast(
+            "Please select a valid image file."
+        );
+
+        return;
+    }
+
+
+    if (file.size > 12 * 1024 * 1024) {
+
+        toast(
+            "Image must be smaller than 12 MB."
+        );
+
+        return;
+    }
+
+
+    selectedFile = file;
+
+
+    const objectURL =
+        URL.createObjectURL(file);
+
+    previewImage.src =
+        objectURL;
+
+
+    uploadContent.style.display =
+        "none";
+
+    preview.classList.add("show");
+
+
+    analyseButton.disabled =
+        false;
+
+
+    fileInfo.textContent =
+        `${file.name} • ${(file.size / 1024 / 1024).toFixed(2)} MB • READY FOR ANALYSIS`;
+
+
+    toast(
+        "Traffic image loaded successfully."
+    );
+
+}
+
+
+/* =========================================================
+   REMOVE IMAGE
+========================================================= */
+
+removeImage.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
+
+        clearWorkspace();
+
+    }
+);
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+clearButton.addEventListener(
+    "click",
+    clearWorkspace
+);
+
+
+function clearWorkspace() {
+
+    selectedFile = null;
+
+    imageInput.value = "";
+
+    previewImage.removeAttribute(
+        "src"
+    );
+
+    preview.classList.remove(
+        "show"
+    );
+
+    uploadContent.style.display =
+        "block";
+
+    analyseButton.disabled =
+        true;
+
+    fileInfo.textContent =
+        "";
+
+    resultImageWrapper.classList.remove(
+        "show"
+    );
+
+    resetResults();
+
+    toast(
+        "Analysis workspace cleared."
+    );
+
+}
+
+
+/* =========================================================
+   RESET RESULTS
+========================================================= */
+
+function resetResults() {
+
+    document.getElementById(
+        "statViolations"
+    ).textContent = "00";
+
+    document.getElementById(
+        "statHelmet"
+    ).textContent = "—";
+
+    document.getElementById(
+        "statPlate"
+    ).textContent = "—";
+
+    document.getElementById(
+        "statConfidence"
+    ).textContent = "—";
+
+
+    document.getElementById(
+        "resultStatus"
+    ).textContent =
+        "Waiting for image";
+
+
+    document.getElementById(
+        "resultTag"
+    ).textContent =
+        "WAITING";
+
+
+    document.getElementById(
+        "decisionBadge"
+    ).textContent =
+        "READY";
+
+
+    document.getElementById(
+        "decisionBadge"
+    ).className =
+        "badge";
+
+
+    document.getElementById(
+        "confidenceText"
+    ).textContent =
+        "0%";
+
+
+    document.getElementById(
+        "confidenceBar"
+    ).style.width =
+        "0%";
+
+
+    document.getElementById(
+        "detailViolation"
+    ).textContent =
+        "—";
+
+
+    document.getElementById(
+        "detailPlate"
+    ).textContent =
+        "Not detected";
+
+
+    document.getElementById(
+        "detailOCR"
+    ).textContent =
+        "—";
+
+
+    document.getElementById(
+        "detailPlateConfidence"
+    ).textContent =
+        "—";
+
+
+    document.getElementById(
+        "violationCount"
+    ).textContent =
+        "0 cases";
+
+
+    document.getElementById(
+        "violationList"
+    ).innerHTML =
+
+        `<div class="empty-result">
+            Upload an image to begin AI analysis.
+        </div>`;
+
+}
+
+
+/* =========================================================
+   NUMBER FORMATTING
+========================================================= */
+
+function percentage(value) {
+
+    let number =
+        Number(value || 0);
+
+
+    if (
+        number > 0 &&
+        number <= 1
+    ) {
+
+        number *= 100;
+
+    }
+
+
+    return Math.max(
+        0,
+        Math.min(
+            100,
+            number
+        )
+    );
+
+}
+
+
+function formatConfidence(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "—";
+
+    }
+
+
+    return (
+        percentage(value)
+            .toFixed(1)
+        + "%"
+    );
+
+}
+
+
+function formatName(value) {
+
+    return String(
+        value || "Unknown"
+    )
+    .replaceAll("_", " ")
+    .replace(
+        /\b\w/g,
+        char => char.toUpperCase()
+    );
+
+}
+
+
+/* =========================================================
+   ANALYSE TRAFFIC
+========================================================= */
+
+analyseButton.addEventListener(
+    "click",
+    analyseTraffic
+);
+
+
+async function analyseTraffic() {
+
+    if (!selectedFile) {
+
+        toast(
+            "Choose a traffic image first."
+        );
+
+        return;
+    }
+
+
+    const formData =
+        new FormData();
+
+
+    /*
+       IMPORTANT
+
+       Flask expects:
+
+       request.files["image"]
+
+       Therefore the field name MUST be "image".
+    */
+
+    formData.append(
+        "image",
+        selectedFile
+    );
+
+
+    loading.classList.add(
+        "show"
+    );
+
+
+    analyseButton.disabled =
+        true;
+
+    chooseButton.disabled =
+        true;
+
+
+    try {
+
+        toast(
+            "Sending image to TrafficGuard AI..."
+        );
+
+
+        /*
+           IMPORTANT
+
+           This matches the Flask backend:
+
+           POST /api/analyze
+        */
+
+        const response =
+            await fetch(
+                "/api/analyze",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        let data;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        }
+        catch (jsonError) {
+
+            throw new Error(
+                "Server returned an invalid response."
+            );
+
+        }
+
+
+        console.log(
+            "TrafficGuard response:",
+            data
+        );
+
+
+        if (
+            !response.ok ||
+            data.success === false
+        ) {
+
+            throw new Error(
+                data.error ||
+                `Analysis failed (${response.status}).`
+            );
+
+        }
+
+
+        displayResults(data);
+
+
+        toast(
+            "Traffic analysis completed."
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "TrafficGuard error:",
+            error
+        );
+
+
+        toast(
+            "Analysis failed: " +
+            error.message
+        );
+
+
+        document.getElementById(
+            "resultStatus"
+        ).textContent =
+            "Analysis failed";
+
+
+        document.getElementById(
+            "resultTag"
+        ).textContent =
+            "ERROR";
+
+    }
+    finally {
+
+        loading.classList.remove(
+            "show"
+        );
+
+
+        analyseButton.disabled =
+            false;
+
+        chooseButton.disabled =
+            false;
+
+    }
+
+}
+
+
+/* =========================================================
+   DISPLAY RESULTS
+========================================================= */
+
+function displayResults(data) {
+
+
+    /* -----------------------------------------------------
+       VIOLATIONS
+    ----------------------------------------------------- */
+
+    const violations =
+        Array.isArray(data.violations)
+            ? data.violations
+            : [];
+
+
+    const violationCount =
+        violations.length;
+
+
+    document.getElementById(
+        "statViolations"
+    ).textContent =
+        String(
+            violationCount
+        ).padStart(2, "0");
+
+
+    document.getElementById(
+        "violationCount"
+    ).textContent =
+        `${violationCount} ${
+            violationCount === 1
+                ? "case"
+                : "cases"
+        }`;
+
+
+    /* -----------------------------------------------------
+       DECISION
+    ----------------------------------------------------- */
+
+    const decision =
+        String(
+            data.decision || ""
+        ).toUpperCase();
+
+
+    const status =
+        decision ||
+        "COMPLETED";
+
+
+    document.getElementById(
+        "resultStatus"
+    ).textContent =
+        formatName(status);
+
+
+    document.getElementById(
+        "resultTag"
+    ).textContent =
+        status;
+
+
+    const badge =
+        document.getElementById(
+            "decisionBadge"
+        );
+
+
+    badge.textContent =
+        status;
+
+
+    badge.className =
+        "badge";
+
+
+    if (
+        decision === "DETECTED"
+    ) {
+
+        badge.classList.add(
+            "detected"
+        );
+
+    }
+    else if (
+        decision === "HUMAN_REVIEW"
+    ) {
+
+        badge.classList.add(
+            "review"
+        );
+
+    }
+    else if (
+        decision === "NOT_DETECTED"
+    ) {
+
+        badge.classList.add(
+            "safe"
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       OVERALL CONFIDENCE
+    ----------------------------------------------------- */
+
+    const confidence =
+        percentage(
+            data.overall_confidence
+        );
+
+
+    document.getElementById(
+        "statConfidence"
+    ).textContent =
+        confidence.toFixed(1)
+        + "%";
+
+
+    document.getElementById(
+        "confidenceText"
+    ).textContent =
+        confidence.toFixed(1)
+        + "%";
+
+
+    document.getElementById(
+        "confidenceBar"
+    ).style.width =
+        confidence + "%";
+
+
+    /* -----------------------------------------------------
+       HELMET
+    ----------------------------------------------------- */
+
+    const helmetStatus =
+        data.helmet_status ||
+        "—";
+
+
+    document.getElementById(
+        "statHelmet"
+    ).textContent =
+        formatName(
+            helmetStatus
+        );
+
+
+    /* -----------------------------------------------------
+       PLATE
+    ----------------------------------------------------- */
+
+    const plateText =
+        data.plate_text ||
+        "Not detected";
+
+
+    document.getElementById(
+        "statPlate"
+    ).textContent =
+        plateText;
+
+
+    document.getElementById(
+        "detailPlate"
+    ).textContent =
+        plateText;
+
+
+    /* -----------------------------------------------------
+       OCR
+    ----------------------------------------------------- */
+
+    document.getElementById(
+        "detailOCR"
+    ).textContent =
+        formatConfidence(
+            data.ocr_confidence
+        );
+
+
+    /* -----------------------------------------------------
+       PLATE CONFIDENCE
+    ----------------------------------------------------- */
+
+    document.getElementById(
+        "detailPlateConfidence"
+    ).textContent =
+        formatConfidence(
+            data.plate_confidence
+        );
+
+
+    /* -----------------------------------------------------
+       VIOLATION TYPE
+    ----------------------------------------------------- */
+
+    if (violations.length > 0) {
+
+        const names =
+            violations
+                .map(
+                    violation =>
+                        formatName(
+                            violation.type
+                        )
+                );
+
+        const uniqueNames =
+            [...new Set(names)];
+
+
+        document.getElementById(
+            "detailViolation"
+        ).textContent =
+            uniqueNames.join(
+                ", "
+            );
+
+    }
+    else {
+
+        document.getElementById(
+            "detailViolation"
+        ).textContent =
+            "No violation";
+
+    }
+
+
+    /* -----------------------------------------------------
+       SINGLE VIOLATION BOX
+    ----------------------------------------------------- */
+
+    const violationList =
+        document.getElementById(
+            "violationList"
+        );
+
+
+    if (
+        violations.length === 0
+    ) {
+
+        violationList.innerHTML =
+
+            `<div class="empty-result">
+                No target violations detected.
+            </div>`;
+
+    }
+    else {
+
+        violationList.innerHTML =
+
+            violations
+                .map(
+                    violation => {
+
+                        const type =
+                            formatName(
+                                violation.type
+                            );
+
+
+                        const conf =
+                            formatConfidence(
+                                violation.confidence
+                            );
+
+
+                        return `
+
+                            <div class="violation-item">
+
+                                <div class="violation-name">
+                                    🚨 ${type}
+                                </div>
+
+                                <div class="violation-confidence">
+                                    ${conf}
+                                </div>
+
+                            </div>
+
+                        `;
+
+                    }
+                )
+                .join("");
+
+    }
+
+
+    /* -----------------------------------------------------
+       ANNOTATED IMAGE
+    ----------------------------------------------------- */
+
+    if (
+        data.annotated_image
+    ) {
+
+        resultImage.src =
+            "data:image/jpeg;base64," +
+            data.annotated_image;
+
+
+        resultImageWrapper.classList.add(
+            "show"
+        );
+
+    }
+    else {
+
+        resultImageWrapper.classList.remove(
+            "show"
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       AUTO SCROLL TO RESULTS
+    ----------------------------------------------------- */
+
+    document
+        .getElementById(
+            "resultsPanel"
+        )
+        .scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+
+}
+
+
+/* =========================================================
+   SYSTEM CLOCK
+========================================================= */
+
+function updateClock() {
+
+    const now =
+        new Date();
+
+
+    document.getElementById(
+        "datetime"
+    ).textContent =
+
+        now.toLocaleString(
+            "en-IN",
+            {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+}
+
+
+updateClock();
+
+setInterval(
+    updateClock,
+    1000
+);
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+resetResults();
+
+
+console.log(
+    "=========================================="
+);
+
+console.log(
+    "TRAFFICGUARD AI FRONTEND READY"
+);
+
+console.log(
+    "Endpoint: /api/analyze"
+);
+
+console.log(
+    "Upload field: image"
+);
+
+console.log(
+    "=========================================="
+);
+
 </script>
+
 </body>
 </html>
