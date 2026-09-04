@@ -1,8 +1,28 @@
 from pathlib import Path
-from ultralytics import YOLO
 import logging
 
+from flask import Flask, jsonify
+from ultralytics import YOLO
+
+
+# ============================================================
+# FLASK APPLICATION
+# ============================================================
+
+app = Flask(__name__)
+
+
+# ============================================================
+# LOGGING
+# ============================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
 logger = logging.getLogger("TrafficGuard")
+
 
 # ============================================================
 # MODEL PATHS
@@ -14,12 +34,11 @@ MAIN_MODEL_NAME = "main_25class_best.pt"
 HELMET_MODEL_NAME = "helmet_balanced_best.pt"
 
 
+# ============================================================
+# FIND MODEL
+# ============================================================
+
 def find_model(filename):
-    """
-    Find model whether it is:
-      1. In repository root
-      2. In models/ folder
-    """
 
     possible_paths = [
         BASE_DIR / filename,
@@ -46,7 +65,7 @@ def find_model(filename):
 
 
 # ============================================================
-# LOAD MAIN MODEL
+# MODEL LOADING
 # ============================================================
 
 logger.info(
@@ -76,7 +95,7 @@ helmet_model = None
 
 
 # ============================================================
-# MAIN YOLO MODEL
+# LOAD MAIN MODEL
 # ============================================================
 
 if MAIN_MODEL_PATH:
@@ -110,7 +129,7 @@ else:
 
 
 # ============================================================
-# HELMET YOLO MODEL
+# LOAD HELMET MODEL
 # ============================================================
 
 if HELMET_MODEL_PATH:
@@ -144,7 +163,39 @@ else:
 
 
 # ============================================================
-# FINAL MODEL STATUS
+# HEALTH CHECK
+# ============================================================
+
+@app.route("/api/health", methods=["GET"])
+def health():
+
+    return jsonify({
+        "service": "TrafficGuard AI",
+        "status": "online",
+        "main_model": main_model is not None,
+        "helmet_model": helmet_model is not None,
+        "main_model_path": MAIN_MODEL_PATH,
+        "helmet_model_path": HELMET_MODEL_PATH
+    })
+
+
+# ============================================================
+# ROOT
+# ============================================================
+
+@app.route("/", methods=["GET"])
+def home():
+
+    return """
+    <h1>TrafficGuard AI</h1>
+    <p>Service is online.</p>
+    <p>API: /api/analyze</p>
+    <p>Health: /api/health</p>
+    """
+
+
+# ============================================================
+# FINAL STATUS
 # ============================================================
 
 logger.info(
