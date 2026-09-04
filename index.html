@@ -1,727 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TrafficGuard AI | Intelligent Traffic Safety</title>
+
+    <meta
+        name="description"
+        content="AI-powered Indian traffic safety detection using YOLO and OCR"
+    >
+
+    <style>
+
+        /* =========================================================
+           GLOBAL
+        ========================================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(255, 153, 51, 0.12),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(19, 136, 8, 0.12),
+                    transparent 30%
+                ),
+                #07111f;
+
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+
+        /* =========================================================
+           BACKGROUND EFFECT
+        ========================================================= */
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255, 153, 51, 0.025),
+                    transparent 40%,
+                    rgba(19, 136, 8, 0.025)
+                );
+
+            pointer-events: none;
+            z-index: -1;
+        }
+
+
+        /* =========================================================
+           NAVBAR
+        ========================================================= */
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+
+            height: 76px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 6%;
+
+            background: rgba(5, 13, 25, 0.86);
+            backdrop-filter: blur(18px);
+
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff9933,
+                    #ffffff 48%,
+                    #138808
+                );
+
+            color: #07111f;
+            font-size: 21px;
+
+            box-shadow:
+                0 0 30px rgba(255,153,51,0.15);
+        }
+
+        .logo span {
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff9933,
+                    #ffffff,
+                    #138808
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+
+            color: #aab7c8;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+
+            background: #20d878;
+
+            box-shadow:
+                0 0 12px rgba(32,216,120,0.8);
+
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.35);
+                opacity: 0.6;
+            }
+        }
+
+
+        /* =========================================================
+           HERO
+        ========================================================= */
+
+        .hero {
+            position: relative;
+
+            min-height: 430px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 80px 20px 60px;
+        }
+
+        .hero::after {
+            content: "";
+
+            position: absolute;
+
+            width: 550px;
+            height: 550px;
+
+            border-radius: 50%;
+
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(255,153,51,0.10),
+                    transparent 68%
+                );
+
+            filter: blur(20px);
+
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+
+            max-width: 950px;
+        }
+
+        .india-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 8px 15px;
+
+            border-radius: 50px;
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            background: rgba(255,255,255,0.045);
+
+            color: #d9e1ec;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            margin-bottom: 25px;
+
+            animation: fadeUp 0.8s ease;
+        }
+
+        .flag {
+            font-size: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(42px, 6vw, 76px);
+
+            line-height: 0.98;
+
+            font-weight: 900;
+
+            letter-spacing: -3px;
+
+            margin-bottom: 25px;
+
+            animation: fadeUp 0.9s ease;
+        }
+
+        .hero h1 .orange {
+            color: #ff9933;
+        }
+
+        .hero h1 .green {
+            color: #138808;
+        }
+
+        .hero-subtitle {
+            max-width: 720px;
+            margin: auto;
+
+            color: #aab7c8;
+
+            font-size: 17px;
+            line-height: 1.7;
+
+            animation: fadeUp 1s ease;
+        }
+
+        @keyframes fadeUp {
+
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================================================
+           MAIN CONTAINER
+        ========================================================= */
+
+        .container {
+            width: min(1180px, 92%);
+
+            margin: auto;
+
+            padding-bottom: 80px;
+        }
+
+
+        /* =========================================================
+           DETECTOR
+        ========================================================= */
+
+        .detector {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,0.07),
+                    rgba(255,255,255,0.025)
+                );
+
+            border: 1px solid rgba(255,255,255,0.10);
+
+            border-radius: 28px;
+
+            padding: 34px;
+
+            box-shadow:
+                0 30px 80px rgba(0,0,0,0.28);
+
+            backdrop-filter: blur(20px);
+
+            animation: fadeUp 1.1s ease;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 25px;
+        }
+
+        .section-title h2 {
+            font-size: 25px;
+        }
+
+        .model-badge {
+            padding: 7px 12px;
+
+            border-radius: 30px;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            background: rgba(19,136,8,0.13);
+
+            color: #67e58c;
+
+            border: 1px solid rgba(19,136,8,0.28);
+        }
+
+
+        /* =========================================================
+           UPLOAD AREA
+        ========================================================= */
+
+        .upload-area {
+            position: relative;
+
+            min-height: 270px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            border: 2px dashed rgba(255,255,255,0.15);
+
+            border-radius: 22px;
+
+            background:
+                rgba(0,0,0,0.16);
+
+            cursor: pointer;
+
+            transition:
+                border-color 0.3s,
+                background 0.3s,
+                transform 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #ff9933;
+
+            background:
+                rgba(255,153,51,0.045);
+
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragging {
+            border-color: #138808;
+
+            background:
+                rgba(19,136,8,0.07);
+
+            transform: scale(1.01);
+        }
+
+        .upload-content {
+            padding: 30px;
+        }
+
+        .upload-icon {
+            width: 75px;
+            height: 75px;
+
+            margin: 0 auto 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            font-size: 35px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,153,51,0.16),
+                    rgba(19,136,8,0.16)
+                );
+
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .upload-content h3 {
+            font-size: 20px;
+            margin-bottom: 9px;
+        }
+
+        .upload-content p {
+            color: #8190a4;
+            font-size: 14px;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+
+        /* =========================================================
+           PREVIEW
+        ========================================================= */
+
+        .preview-container {
+            display: none;
+
+            margin-top: 25px;
+
+            position: relative;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            background: #020810;
+
+            border: 1px solid rgba(255,255,255,0.09);
+        }
+
+        .preview-container img {
+            width: 100%;
+            max-height: 600px;
+
+            object-fit: contain;
+
+            display: block;
+        }
+
+        .remove-image {
+            position: absolute;
+
+            top: 15px;
+            right: 15px;
+
+            width: 38px;
+            height: 38px;
+
+            border-radius: 50%;
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            background: rgba(0,0,0,0.70);
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 17px;
+        }
+
+
+        /* =========================================================
+           DETECT BUTTON
+        ========================================================= */
+
+        .detect-button {
+            width: 100%;
+
+            margin-top: 22px;
+
+            padding: 17px 24px;
+
+            border: none;
+
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            color: #07111f;
+
+            font-size: 16px;
+            font-weight: 800;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff9933 0%,
+                    #ffffff 50%,
+                    #138808 100%
+                );
+
+            transition:
+                transform 0.25s,
+                box-shadow 0.25s;
+
+            box-shadow:
+                0 10px 30px rgba(255,153,51,0.10);
+        }
+
+        .detect-button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 16px 40px rgba(255,153,51,0.18);
+        }
+
+        .detect-button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+        /* =========================================================
+           LOADING
+        ========================================================= */
+
+        .loading {
+            display: none;
+
+            margin-top: 25px;
+
+            text-align: center;
+
+            padding: 25px;
+
+            border-radius: 16px;
+
+            background:
+                rgba(255,255,255,0.035);
+        }
+
+        .spinner {
+            width: 38px;
+            height: 38px;
+
+            margin: 0 auto 15px;
+
+            border-radius: 50%;
+
+            border: 3px solid rgba(255,255,255,0.10);
+
+            border-top-color: #ff9933;
+
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading p {
+            color: #9caabd;
+            font-size: 14px;
+        }
+
+
+        /* =========================================================
+           RESULTS
+        ========================================================= */
+
+        .results {
+            display: none;
+
+            margin-top: 35px;
+
+            animation: fadeUp 0.6s ease;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            font-size: 24px;
+        }
+
+        .result-status {
+            padding: 8px 14px;
+
+            border-radius: 30px;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .status-safe {
+            background: rgba(19,136,8,0.13);
+            color: #55dc7d;
+        }
+
+        .status-danger {
+            background: rgba(255,72,72,0.13);
+            color: #ff7373;
+        }
+
+        .status-review {
+            background: rgba(255,193,7,0.13);
+            color: #ffc857;
+        }
+
+
+        /* =========================================================
+           RESULT GRID
+        ========================================================= */
+
+        .result-grid {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.3fr)
+                minmax(300px, 0.7fr);
+
+            gap: 20px;
+        }
+
+        .result-image {
+            min-height: 300px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            background: #020810;
+
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .result-image img {
+            max-width: 100%;
+            max-height: 600px;
+
+            object-fit: contain;
+        }
+
+        .result-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-card {
+            padding: 17px;
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,0.045);
+
+            border:
+                1px solid rgba(255,255,255,0.08);
+        }
+
+        .info-label {
+            color: #738198;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            margin-bottom: 7px;
+        }
+
+        .info-value {
+            color: #ffffff;
+
+            font-size: 17px;
+
+            font-weight: 700;
+        }
+
+        .confidence-bar {
+            height: 7px;
+
+            margin-top: 10px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,0.08);
+
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+
+            width: 0%;
+
+            border-radius: inherit;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ff9933,
+                    #138808
+                );
+
+            transition: width 1s ease;
+        }
+
+
+        /* =========================================================
+           VIOLATION LIST
+        ========================================================= */
+
+        .violation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            margin-top: 8px;
+        }
+
+        .violation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 11px 13px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,70,70,0.08);
+
+            border:
+                1px solid rgba(255,70,70,0.12);
+        }
+
+        .violation-name {
+            color: #ff8a8a;
+            font-weight: 650;
+            font-size: 13px;
+        }
+
+        .violation-confidence {
+            color: #c6ced9;
+            font-size: 12px;
+        }
+
+
+        /* =========================================================
+           OCR
+        ========================================================= */
+
+        .plate-box {
+            margin-top: 5px;
+
+            padding: 15px;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,153,51,0.08),
+                    rgba(19,136,8,0.08)
+                );
+
+            border: 1px solid rgba(255,255,255,0.09);
+        }
+
+        .plate-number {
+            font-family: monospace;
+
+            font-size: 25px;
+
+            letter-spacing: 4px;
+
+            text-align: center;
+
+            color: #ffffff;
+
+            font-weight: 900;
+        }
+
+        .plate-placeholder {
+            color: #758296;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+
+        /* =========================================================
+           PIPELINE
+        ========================================================= */
+
+        .pipeline {
+            margin-top: 70px;
+
+            text-align: center;
+        }
+
+        .pipeline h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .pipeline-subtitle {
+            color: #78869a;
+            margin-bottom: 30px;
+        }
+
+        .pipeline-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(5, 1fr);
+
+            gap: 12px;
+        }
+
+        .pipeline-card {
+            position: relative;
+
+            padding: 22px 14px;
+
+            border-radius: 17px;
+
+            background:
+                rgba(255,255,255,0.035);
+
+            border:
+                1px solid rgba(255,255,255,0.08);
+
+            transition:
+                transform 0.25s,
+                border-color 0.25s;
+        }
+
+        .pipeline-card:hover {
+            transform: translateY(-5px);
+
+            border-color:
+                rgba(255,153,51,0.3);
+        }
+
+        .pipeline-icon {
+            font-size: 27px;
+            margin-bottom: 12px;
+        }
+
+        .pipeline-card h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .pipeline-card p {
+            color: #718096;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+
+        /* =========================================================
+           FOOTER
+        ========================================================= */
+
+        footer {
+            margin-top: 70px;
+
+            padding: 35px 20px;
+
+            text-align: center;
+
+            border-top:
+                1px solid rgba(255,255,255,0.07);
+
+            color: #647287;
+
+            font-size: 13px;
+        }
+
+        .author {
+            margin-top: 9px;
+
+            color: #aab5c5;
+
+            font-weight: 700;
+        }
+
+        .author span {
+            color: #ff9933;
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 900px) {
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            nav {
+                padding: 0 20px;
+            }
+
+            .nav-status {
+                display: none;
+            }
+
+            .hero {
+                padding-top: 55px;
+            }
+
+            .hero h1 {
+                letter-spacing: -2px;
+            }
+
+            .detector {
+                padding: 20px;
+            }
+
+            .pipeline-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                align-items: flex-start;
+                gap: 10px;
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+<!-- =============================================================
+     NAVBAR
+============================================================== -->
+
+<nav>
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            🚦
+        </div>
+
+        <span>
+            TrafficGuard AI
+        </span>
+
+    </div>
+
+
+    <div class="nav-status">
+
+        <div class="status-dot"></div>
+
+        AI Detection System Online
+
+    </div>
+
+</nav>
+
+
+
+<!-- =============================================================
+     HERO
+============================================================== -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="india-badge">
+
+            <span class="flag">🇮🇳</span>
+
+            Built for Indian Road Safety
+
+        </div>
+
+
+        <h1>
+
+            Smarter Roads.
+            <br>
+
+            <span class="orange">
+                Safer
+            </span>
+
+            <span class="green">
+                India.
+            </span>
+
+        </h1>
+
+
+        <p class="hero-subtitle">
+
+            AI-powered traffic violation detection using
+            multiple YOLO models and number-plate OCR.
+            Upload a traffic image and let the system
+            analyse violations automatically.
+
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =============================================================
+     MAIN
+============================================================== -->
+
+<main class="container">
+
+
+    <!-- =========================================================
+         DETECTOR
+    ========================================================== -->
+
+    <section class="detector">
+
+
+        <div class="section-title">
+
+            <h2>
+                🔍 Traffic Violation Detector
+            </h2>
+
+            <div class="model-badge">
+                YOLO + OCR
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             UPLOAD
+        ====================================================== -->
+
+        <label
+            class="upload-area"
+            id="uploadArea"
+            for="imageInput"
+        >
+
+            <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+            >
+
+
+            <div class="upload-content">
+
+                <div class="upload-icon">
+                    📷
+                </div>
+
+
+                <h3>
+                    Upload Traffic Image
+                </h3>
+
+
+                <p>
+                    Click here or drag & drop an image
+                </p>
+
+
+                <p style="margin-top:8px;">
+                    JPG • JPEG • PNG
+                </p>
+
+            </div>
+
+        </label>
+
+
+
+        <!-- =====================================================
+             PREVIEW
+        ====================================================== -->
+
+        <div
+            class="preview-container"
+            id="previewContainer"
+        >
+
+            <img
+                id="previewImage"
+                alt="Selected traffic image"
+            >
+
+
+            <button
+                class="remove-image"
+                id="removeImage"
+                type="button"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             DETECT BUTTON
+        ====================================================== -->
+
+        <button
+            class="detect-button"
+            id="detectButton"
+            disabled
+        >
+
+            🚀 Analyse Traffic Image
+
+        </button>
+
+
+
+        <!-- =====================================================
+             LOADING
+        ====================================================== -->
+
+        <div
+            class="loading"
+            id="loading"
+        >
+
+            <div class="spinner"></div>
+
+            <p>
+                Running AI detection...
+            </p>
+
+            <p style="margin-top:6px;">
+                Main YOLO → Helmet YOLO → Plate Detection → OCR
+            </p>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             RESULTS
+        ====================================================== -->
+
+        <div
+            class="results"
+            id="results"
+        >
+
+
+            <div class="results-header">
+
+                <h2>
+                    Detection Result
+                </h2>
+
+                <div
+                    class="result-status"
+                    id="resultStatus"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+
+            <div class="result-grid">
+
+
+                <!-- RESULT IMAGE -->
+
+                <div class="result-image">
+
+                    <img
+                        id="resultImage"
+                        alt="Detection result"
+                    >
+
+                </div>
+
+
+
+                <!-- RESULT INFORMATION -->
+
+                <div class="result-info">
+
+
+                    <!-- VIOLATION -->
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Detection
+                        </div>
+
+                        <div
+                            class="info-value"
+                            id="detectionText"
+                        >
+                            No result
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CONFIDENCE -->
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Highest Confidence
+                        </div>
+
+                        <div
+                            class="info-value"
+                            id="confidenceText"
+                        >
+                            --
+                        </div>
+
+                        <div class="confidence-bar">
+
+                            <div
+                                class="confidence-fill"
+                                id="confidenceFill"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- OCR -->
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Number Plate OCR
+                        </div>
+
+
+                        <div class="plate-box">
+
+                            <div
+                                class="plate-number"
+                                id="plateNumber"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- VIOLATIONS -->
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Violations Detected
+                        </div>
+
+
+                        <div
+                            class="violation-list"
+                            id="violationList"
+                        >
+
+                            <div class="plate-placeholder">
+                                No violations yet
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================================
+         AI PIPELINE
+    ========================================================== -->
+
+    <section class="pipeline">
+
+        <h2>
+            How TrafficGuard AI Works
+        </h2>
+
+        <p class="pipeline-subtitle">
+            Multi-stage intelligent traffic analysis
+        </p>
+
+
+        <div class="pipeline-grid">
+
+
+            <div class="pipeline-card">
+
+                <div class="pipeline-icon">
+                    📷
+                </div>
+
+                <h3>
+                    Upload
+                </h3>
+
+                <p>
+                    Traffic image enters the detection system.
+                </p>
+
+            </div>
+
+
+
+            <div class="pipeline-card">
+
+                <div class="pipeline-icon">
+                    🧠
+                </div>
+
+                <h3>
+                    Main YOLO
+                </h3>
+
+                <p>
+                    Detects traffic violations from the
+                    25-class model.
+                </p>
+
+            </div>
+
+
+
+            <div class="pipeline-card">
+
+                <div class="pipeline-icon">
+                    🪖
+                </div>
+
+                <h3>
+                    Helmet AI
+                </h3>
+
+                <p>
+                    Checks for no-helmet violations.
+                </p>
+
+            </div>
+
+
+
+            <div class="pipeline-card">
+
+                <div class="pipeline-icon">
+                    🚘
+                </div>
+
+                <h3>
+                    Plate Detection
+                </h3>
+
+                <p>
+                    Locates the vehicle registration plate.
+                </p>
+
+            </div>
+
+
+
+            <div class="pipeline-card">
+
+                <div class="pipeline-icon">
+                    🔤
+                </div>
+
+                <h3>
+                    OCR
+                </h3>
+
+                <p>
+                    Extracts the registration number
+                    from the detected plate.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =============================================================
+     FOOTER
+============================================================== -->
+
+<footer>
+
+    <div>
+        🇮🇳 AI-Powered Traffic Safety System
+    </div>
+
+    <div class="author">
+
+        Designed & Developed by
+        <span>
+            Karthik Kumar
+        </span>
+
+    </div>
+
+</footer>
+
+
+
 <script>
-const $ = id => document.getElementById(id);
+"use strict";
+
+const imageInput = document.getElementById("imageInput");
+const uploadArea = document.getElementById("uploadArea");
+const previewContainer = document.getElementById("previewContainer");
+const previewImage = document.getElementById("previewImage");
+const removeImage = document.getElementById("removeImage");
+const detectButton = document.getElementById("detectButton");
+const loading = document.getElementById("loading");
+const results = document.getElementById("results");
+const resultImage = document.getElementById("resultImage");
+const resultStatus = document.getElementById("resultStatus");
+const detectionText = document.getElementById("detectionText");
+const confidenceText = document.getElementById("confidenceText");
+const confidenceFill = document.getElementById("confidenceFill");
+const plateNumber = document.getElementById("plateNumber");
+const violationList = document.getElementById("violationList");
 
 let selectedFile = null;
 
-const drop = $('drop');
-const file = $('file');
-const preview = $('preview');
-
-/* =========================
-   CLOCK
-========================= */
-function clock() {
-    const d = new Date();
-
-    $('clock').textContent =
-        d.toLocaleString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        }).toUpperCase();
+function setLoading(show) {
+    if (loading) loading.style.display = show ? "block" : "none";
+    if (detectButton) detectButton.disabled = show || !selectedFile;
 }
 
-clock();
-setInterval(clock, 1000);
-
-
-/* =========================
-   TOAST
-========================= */
-function toast(msg) {
-    const t = $('toast');
-
-    t.textContent = msg;
-    t.classList.add('show');
-
-    clearTimeout(window.tt);
-
-    window.tt = setTimeout(() => {
-        t.classList.remove('show');
-    }, 3500);
-}
-
-
-/* =========================
-   NAVIGATION
-========================= */
-function nav(btn, target) {
-
-    document
-        .querySelectorAll('.nav button')
-        .forEach(x => x.classList.remove('active'));
-
-    btn.classList.add('active');
-
-    if (target === 'detection') {
-
-        document
-            .querySelector('#detection')
-            .scrollIntoView({ behavior: 'smooth' });
-
-    } else if (target === 'overview') {
-
-        document
-            .querySelector('#overview')
-            .scrollIntoView({ behavior: 'smooth' });
-
-    } else {
-
-        toast(target.toUpperCase() + ' MODULE • Ready for integration');
-    }
-}
-
-
-/* =========================
-   FILE SELECTION
-========================= */
-
-$('choose').onclick = function () {
-    file.click();
-};
-
-
-drop.onclick = function (e) {
-
-    if (e.target.closest('.loading')) {
+function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
         return;
     }
 
-    file.click();
-};
-
-
-/* =========================
-   DRAG & DROP
-========================= */
-
-['dragenter', 'dragover'].forEach(eventName => {
-
-    drop.addEventListener(eventName, e => {
-
-        e.preventDefault();
-
-        drop.classList.add('drag');
-
-    });
-
-});
-
-
-['dragleave', 'drop'].forEach(eventName => {
-
-    drop.addEventListener(eventName, e => {
-
-        e.preventDefault();
-
-        drop.classList.remove('drag');
-
-    });
-
-});
-
-
-drop.addEventListener('drop', e => {
-
-    const droppedFile = e.dataTransfer.files[0];
-
-    if (droppedFile) {
-
-        setFile(droppedFile);
-
-    }
-
-});
-
-
-file.addEventListener('change', () => {
-
-    if (file.files[0]) {
-
-        setFile(file.files[0]);
-
-    }
-
-});
-
-
-/* =========================
-   SET FILE
-========================= */
-
-function setFile(f) {
-
-    if (!f.type.startsWith('image/')) {
-
-        toast('Please select an image file.');
-
+    if (file.size > 12 * 1024 * 1024) {
+        alert("Image must be smaller than 12 MB.");
         return;
     }
 
+    selectedFile = file;
 
-    if (f.size > 12 * 1024 * 1024) {
-
-        toast('Image is larger than the 12 MB limit.');
-
-        return;
-    }
-
-
-    selectedFile = f;
-
-    preview.src = URL.createObjectURL(f);
-
-    drop.classList.add('has-image');
-
-    $('analyse').disabled = false;
-
-    $('fileMeta').textContent =
-        `${f.name} • ${(f.size / 1024 / 1024).toFixed(2)} MB • READY FOR ANALYSIS`;
-
-    toast('Traffic image loaded successfully.');
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        previewImage.src = event.target.result;
+        previewContainer.style.display = "block";
+        detectButton.disabled = false;
+        results.style.display = "none";
+    };
+    reader.onerror = function () {
+        alert("Could not read the selected image.");
+    };
+    reader.readAsDataURL(file);
 }
 
+imageInput.addEventListener("change", function () {
+    if (this.files && this.files.length) handleFile(this.files[0]);
+});
 
-/* =========================
-   CLEAR
-========================= */
-
-$('clear').onclick = function () {
-
+removeImage.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
     selectedFile = null;
-
-    file.value = '';
-
-    preview.removeAttribute('src');
-
-    drop.classList.remove('has-image');
-
-    $('analyse').disabled = true;
-
-    $('fileMeta').textContent = '';
-
-    $('resultImageWrap').classList.remove('show');
-
+    imageInput.value = "";
+    previewImage.removeAttribute("src");
+    previewContainer.style.display = "none";
+    detectButton.disabled = true;
+    results.style.display = "none";
     resetResults();
+});
 
-    toast('Analysis workspace cleared.');
-};
+["dragenter", "dragover"].forEach(function (eventName) {
+    uploadArea.addEventListener(eventName, function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        uploadArea.classList.add("dragging");
+    });
+});
 
+["dragleave", "drop"].forEach(function (eventName) {
+    uploadArea.addEventListener(eventName, function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        uploadArea.classList.remove("dragging");
+    });
+});
 
-/* =========================
-   RESET RESULTS
-========================= */
+uploadArea.addEventListener("drop", function (event) {
+    const files = event.dataTransfer.files;
+    if (files && files.length) handleFile(files[0]);
+});
 
-function resetResults() {
-
-    $('violations').textContent = '00';
-
-    $('helmet').textContent = '—';
-
-    $('plate').textContent = '—';
-
-    $('confidence').textContent = '—';
-
-    $('status').textContent = 'Waiting for image';
-
-    $('decisionTag').textContent = 'WAITING';
-
-    $('badge').textContent = 'READY';
-
-    $('badge').className = 'decision-badge';
-
-    $('confText').textContent = '0%';
-
-    $('bar').style.width = '0%';
-
-    $('detailViolations').textContent = '—';
-
-    $('detailPlate').textContent = 'Not detected';
-
-    $('ocrConf').textContent = '—';
-
-    $('plateConf').textContent = '—';
-
-    $('violationCount').textContent = '0 cases';
-
-    $('list').innerHTML =
-        '<div class="empty-result">Upload an image to begin AI analysis.</div>';
-}
-
-
-/* =========================
-   PERCENTAGE
-========================= */
-
-function pct(v) {
-
-    let n = Number(v || 0);
-
-    if (n <= 1) {
-        n *= 100;
-    }
-
-    return Math.max(
-        0,
-        Math.min(100, n)
-    );
-}
-
-
-/* =========================
-   FORMAT NAME
-========================= */
-
-function formatName(s) {
-
-    return String(s || 'Unknown')
-        .replaceAll('_', ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-
-/* =========================================================
-   IMPORTANT
-   ANALYSE TRAFFIC BUTTON
-========================================================= */
-
-$('analyse').onclick = async function () {
-
-    console.log('====================================');
-    console.log('🚀 TRAFFIC ANALYSIS STARTED');
-    console.log('====================================');
-
-
-    /* Check image */
-
+detectButton.addEventListener("click", async function () {
     if (!selectedFile) {
-
-        toast('Choose a traffic image first.');
-
+        alert("Please select a traffic image first.");
         return;
     }
 
-
-    console.log('📷 File:', selectedFile.name);
-
-    console.log(
-        '📦 Size:',
-        selectedFile.size,
-        'bytes'
-    );
-
-    console.log(
-        '🖼️ Type:',
-        selectedFile.type
-    );
-
-
-    /* Create FormData */
+    setLoading(true);
+    results.style.display = "none";
 
     const formData = new FormData();
-
-    formData.append(
-        'image',
-        selectedFile,
-        selectedFile.name
-    );
-
-
-    /* Show loading */
-
-    $('loading').classList.add('show');
-
-    $('analyse').disabled = true;
-
-    $('choose').disabled = true;
-
+    formData.append("image", selectedFile, selectedFile.name);
 
     try {
-
-        console.log(
-            '📡 Sending POST request to /api/analyze...'
-        );
-
-
-        const response = await fetch(
-            '/api/analyze',
-            {
-                method: 'POST',
-                body: formData
-            }
-        );
-
-
-        console.log(
-            '📡 HTTP status:',
-            response.status
-        );
-
-
-        console.log(
-            '📡 Response OK:',
-            response.ok
-        );
-
-
-        /* Read response as TEXT first */
-
-        const responseText =
-            await response.text();
-
-
-        console.log(
-            '📄 Server response:',
-            responseText
-        );
-
-
-        let data;
-
-
-        /* Convert response to JSON */
-
-        try {
-
-            data =
-                JSON.parse(responseText);
-
-        } catch (jsonError) {
-
-            console.error(
-                '❌ JSON parsing failed:',
-                jsonError
-            );
-
-            throw new Error(
-                'Server returned an invalid response: ' +
-                responseText.substring(0, 300)
-            );
-        }
-
-
-        /* Server returned error */
-
-        if (!response.ok) {
-
-            console.error(
-                '❌ Backend error:',
-                data
-            );
-
-
-            throw new Error(
-                data.details ||
-                data.error ||
-                data.message ||
-                'Analysis request failed.'
-            );
-        }
-
-
-        /* Success */
-
-        console.log(
-            '===================================='
-        );
-
-        console.log(
-            '✅ ANALYSIS SUCCESSFUL'
-        );
-
-        console.log(
-            data
-        );
-
-        console.log(
-            '===================================='
-        );
-
-
-        render(data);
-
-
-        toast(
-            'Traffic analysis completed successfully.'
-        );
-
-    }
-
-
-    catch (error) {
-
-        console.error(
-            '===================================='
-        );
-
-        console.error(
-            '❌ ANALYSIS FAILED'
-        );
-
-        console.error(
-            error
-        );
-
-        console.error(
-            '===================================='
-        );
-
-
-        $('status').textContent =
-            'Analysis failed';
-
-
-        $('decisionTag').textContent =
-            'ERROR';
-
-
-        $('badge').textContent =
-            'ERROR';
-
-
-        $('badge').className =
-            'decision-badge danger';
-
-
-        toast(
-            error.message ||
-            'Analysis failed. Check the backend.'
-        );
-
-    }
-
-
-    finally {
-
-        $('loading').classList.remove('show');
-
-        $('analyse').disabled = false;
-
-        $('choose').disabled = false;
-
-    }
-
-};
-
-
-/* =========================
-   RENDER RESULT
-========================= */
-
-function render(d) {
-
-    console.log(
-        'Rendering AI result:',
-        d
-    );
-
-
-    const vs =
-        Array.isArray(d.violations)
-            ? d.violations
-            : [];
-
-
-    const confidence =
-        pct(d.overall_confidence);
-
-
-    const decision =
-        d.decision || 'NOT_DETECTED';
-
-
-    $('violations').textContent =
-        String(vs.length).padStart(2, '0');
-
-
-    $('helmet').textContent =
-        d.helmet_status || 'Not detected';
-
-
-    $('plate').textContent =
-        d.plate_text || '—';
-
-
-    $('confidence').textContent =
-        confidence.toFixed(1) + '%';
-
-
-    $('confText').textContent =
-        confidence.toFixed(1) + '%';
-
-
-    setTimeout(() => {
-
-        $('bar').style.width =
-            confidence + '%';
-
-    }, 80);
-
-
-    $('detailViolations').textContent =
-        vs.length
-            ? vs.map(v => formatName(v.type)).join(', ')
-            : 'None';
-
-
-    $('detailPlate').textContent =
-        d.plate_text || 'Not detected';
-
-
-    $('ocrConf').textContent =
-        d.ocr_confidence != null
-            ? pct(d.ocr_confidence).toFixed(1) + '%'
-            : '—';
-
-
-    $('plateConf').textContent =
-        d.plate_confidence != null
-            ? pct(d.plate_confidence).toFixed(1) + '%'
-            : '—';
-
-
-    $('violationCount').textContent =
-        vs.length +
-        ' case' +
-        (vs.length === 1 ? '' : 's');
-
-
-    const status =
-        decision === 'HUMAN_REVIEW'
-            ? 'Human review required'
-            : decision === 'DETECTED'
-                ? 'Violation detected'
-                : 'No target violation detected';
-
-
-    $('status').textContent =
-        status;
-
-
-    $('decisionTag').textContent =
-        decision.replaceAll('_', ' ');
-
-
-    $('badge').textContent =
-        decision === 'HUMAN_REVIEW'
-            ? 'REVIEW'
-            : decision === 'DETECTED'
-                ? 'ALERT'
-                : 'CLEAR';
-
-
-    $('badge').className =
-        'decision-badge ' +
-        (
-            decision === 'HUMAN_REVIEW'
-                ? 'review'
-                : decision === 'DETECTED'
-                    ? 'danger'
-                    : ''
-        );
-
-
-    $('list').innerHTML =
-        vs.length
-
-            ? vs.map(v =>
-
-                `<div class="vitem">
-                    <span>⚠ ${formatName(v.type)}</span>
-                    <b>${pct(v.confidence).toFixed(1)}%</b>
-                </div>`
-
-            ).join('')
-
-            : '<div class="empty-result">✓ No target violations detected.</div>';
-
-
-    /* Annotated image */
-
-    if (d.annotated_image) {
-
-        $('resultImage').src =
-            'data:image/jpeg;base64,' +
-            d.annotated_image;
-
-        $('resultImageWrap')
-            .classList
-            .add('show');
-
-    }
-
-
-    /* Scroll result */
-
-    document
-        .querySelector('#overview')
-        .scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        console.log("TrafficGuard: sending image to /api/analyze");
+
+        const response = await fetch("/api/analyze", {
+            method: "POST",
+            body: formData
         });
 
+        const text = await response.text();
+        console.log("TrafficGuard response status:", response.status);
+        console.log("TrafficGuard response:", text);
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error("Server returned an invalid response.");
+        }
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.details || data.error || "Traffic analysis failed.");
+        }
+
+        displayResults(data);
+
+    } catch (error) {
+        console.error("TrafficGuard analysis error:", error);
+        showError(error.message || "Analysis failed. Please try again.");
+    } finally {
+        setLoading(false);
+    }
+});
+
+function displayResults(data) {
+    results.style.display = "block";
+
+    if (data.annotated_image) {
+        resultImage.src = "data:image/jpeg;base64," + data.annotated_image;
+    } else {
+        resultImage.src = previewImage.src;
+    }
+
+    const violations = Array.isArray(data.violations) ? data.violations : [];
+    const decision = data.decision || "NOT_DETECTED";
+
+    let confidence = Number(data.overall_confidence || 0);
+    if (confidence <= 1) confidence *= 100;
+    confidence = Math.max(0, Math.min(100, confidence));
+
+    confidenceText.textContent = confidence.toFixed(1) + "%";
+    confidenceFill.style.width = confidence + "%";
+
+    if (decision === "DETECTED") {
+        resultStatus.textContent = "⚠ VIOLATION DETECTED";
+        resultStatus.className = "result-status status-danger";
+        detectionText.textContent = violations.length + " violation(s) detected.";
+    } else if (decision === "HUMAN_REVIEW") {
+        resultStatus.textContent = "⚠ HUMAN REVIEW";
+        resultStatus.className = "result-status status-review";
+        detectionText.textContent = "Review required.";
+    } else {
+        resultStatus.textContent = "✓ NO VIOLATION";
+        resultStatus.className = "result-status status-safe";
+        detectionText.textContent = "No target violation detected.";
+    }
+
+    const plate = data.plate_text || data.plate || data.plate_number || "";
+    plateNumber.textContent = plate || "Not detected";
+
+    violationList.innerHTML = "";
+
+    if (!violations.length) {
+        violationList.innerHTML = '<div class="plate-placeholder">✓ No target violations detected</div>';
+    } else {
+        violations.forEach(function (violation) {
+            const item = document.createElement("div");
+            item.className = "violation-item";
+
+            const name = formatViolationName(
+                violation.type || violation.name || "Unknown violation"
+            );
+
+            let conf = Number(violation.confidence || 0);
+            if (conf <= 1) conf *= 100;
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "violation-name";
+            nameSpan.textContent = "⚠ " + name;
+
+            const confSpan = document.createElement("span");
+            confSpan.className = "violation-confidence";
+            confSpan.textContent = conf.toFixed(1) + "%";
+
+            item.appendChild(nameSpan);
+            item.appendChild(confSpan);
+            violationList.appendChild(item);
+        });
+    }
+
+    setTimeout(function () {
+        results.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
 }
 
+function showError(message) {
+    results.style.display = "block";
+    resultStatus.textContent = "✕ ANALYSIS FAILED";
+    resultStatus.className = "result-status status-danger";
+    detectionText.textContent = message;
+    confidenceText.textContent = "0%";
+    confidenceFill.style.width = "0%";
+    plateNumber.textContent = "Not detected";
+    violationList.innerHTML = '<div class="plate-placeholder">Analysis failed. Please try again.</div>';
+}
 
-/* =========================
-   BACKEND HEALTH CHECK
-========================= */
+function resetResults() {
+    resultStatus.textContent = "--";
+    resultStatus.className = "result-status";
+    detectionText.textContent = "No result";
+    confidenceText.textContent = "--";
+    confidenceFill.style.width = "0%";
+    plateNumber.textContent = "--";
+    violationList.innerHTML = '<div class="plate-placeholder">No violations yet</div>';
+}
 
-fetch('/api/health')
+function formatViolationName(name) {
+    return String(name)
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, function (character) {
+            return character.toUpperCase();
+        });
+}
 
-    .then(response => {
+async function checkBackend() {
+    try {
+        const response = await fetch("/api/health", { cache: "no-store" });
+        if (!response.ok) throw new Error("Health check failed");
+        const health = await response.json();
+        console.log("TrafficGuard backend health:", health);
+    } catch (error) {
+        console.warn("TrafficGuard backend health check failed:", error);
+    }
+}
 
-        if (!response.ok) {
-
-            throw new Error(
-                'Backend health check failed'
-            );
-        }
-
-        return response.json();
-
-    })
-
-    .then(health => {
-
-        console.log(
-            '✅ Backend health:',
-            health
-        );
-
-
-        if (
-            health.plate_model === false ||
-            health.ocr === false
-        ) {
-
-            $('plateReady').textContent =
-                '● OPTIONAL';
-
-        }
-
-    })
-
-    .catch(error => {
-
-        console.error(
-            '❌ Backend offline:',
-            error
-        );
-
-
-        $('systemText').textContent =
-            'BACKEND OFFLINE';
-
-
-        $('systemText')
-            .previousElementSibling
-            .style.background =
-            'var(--red)';
-
-    });
+resetResults();
+checkBackend();
 
 </script>
+
+</body>
+</html>
