@@ -10,12 +10,13 @@ from ultralytics import YOLO
 
 
 # ============================================================
-# APP
+# FLASK APP
 # ============================================================
 
 app = Flask(__name__)
 
-app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024
+# Maximum upload size: 10 MB
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
 # ============================================================
@@ -36,8 +37,8 @@ logger = logging.getLogger("TrafficGuard")
 
 BASE_DIR = Path(__file__).resolve().parent
 
-MAIN_MODEL = BASE_DIR / "main_25class_best.pt"
-HELMET_MODEL = BASE_DIR / "helmet_balanced_best.pt"
+MAIN_MODEL_NAME = "main_25class_best.pt"
+HELMET_MODEL_NAME = "helmet_balanced_best.pt"
 
 
 # ============================================================
@@ -46,80 +47,103 @@ HELMET_MODEL = BASE_DIR / "helmet_balanced_best.pt"
 
 def find_model(filename):
 
-    locations = [
+    paths = [
         BASE_DIR / filename,
         BASE_DIR / "models" / filename,
     ]
 
-    for path in locations:
+    for path in paths:
 
-        if path.exists() and path.is_file():
+        if path.is_file():
 
-            logger.info("MODEL FOUND: %s", path)
+            logger.info(
+                "Model found: %s",
+                path
+            )
 
             return path
 
-    logger.error("MODEL NOT FOUND: %s", filename)
+    logger.error(
+        "Model NOT found: %s",
+        filename
+    )
 
     return None
-
-
-main_model_path = find_model("main_25class_best.pt")
-helmet_model_path = find_model("helmet_balanced_best.pt")
 
 
 # ============================================================
 # LOAD MODELS
 # ============================================================
 
-main_model = None
-helmet_model = None
-
-
 logger.info("=" * 60)
 logger.info("TRAFFICGUARD AI MODEL LOADING")
 logger.info("=" * 60)
 
 
+main_model_path = find_model(
+    MAIN_MODEL_NAME
+)
+
+helmet_model_path = find_model(
+    HELMET_MODEL_NAME
+)
+
+
+main_model = None
+helmet_model = None
+
+
+# ============================================================
+# MAIN MODEL
+# ============================================================
+
 if main_model_path:
 
     try:
 
-        logger.info("Loading main model...")
+        logger.info(
+            "Loading main model..."
+        )
 
         main_model = YOLO(
             str(main_model_path)
         )
 
         logger.info(
-            "MAIN MODEL LOADED SUCCESSFULLY"
+            "Main model loaded successfully"
         )
 
     except Exception:
 
         logger.exception(
-            "MAIN MODEL LOAD FAILED"
+            "Main model loading failed"
         )
 
+
+# ============================================================
+# HELMET MODEL
+# ============================================================
 
 if helmet_model_path:
 
     try:
 
-        logger.info("Loading helmet model...")
+        logger.info(
+            "Loading helmet model..."
+        )
 
         helmet_model = YOLO(
             str(helmet_model_path)
         )
 
         logger.info(
-            "HELMET MODEL LOADED SUCCESSFULLY"
+            "Helmet model loaded successfully"
         )
 
     except Exception:
 
         logger.exception(
-            "HELMET MODEL LOAD FAILED"
+            "Helmet model loading failed"
         )
 
 
@@ -175,10 +199,10 @@ def get_class_name(model, class_id):
 
 
 # ============================================================
-# YOLO DETECTION
+# YOLO INFERENCE
 # ============================================================
 
-def detect(model, image, confidence=0.25):
+def run_detection(model, image):
 
     detections = []
 
@@ -186,102 +210,121 @@ def detect(model, image, confidence=0.25):
 
         return detections
 
-    results = model.predict(
-        source=image,
-        imgsz=416,
-        conf=confidence,
-        verbose=False,
-        device="cpu"
-    )
+    try:
 
-    if not results:
+        results = model.predict(
+            source=image,
+            imgsz=320,
+            conf=0.25,
+            device="cpu",
+            verbose=False
+        )
 
-        return detections
+        if not results:
 
-    result = results[0]
+            return detections
 
-    if result.boxes is None:
+        result = results[0]
 
-        return detections
+        if result.boxes is None:
 
-    boxes = result.boxes
+            return detections
 
-    for i in range(len(boxes)):
+        for box in result.boxes:
 
-        try:
+            try:
 
-            class_id = int(
-                boxes.cls[i].item()
-            )
+                class_id = int(
+                    box.cls[0].item()
+                )
 
-            confidence_value = float(
-                boxes.conf[i].item()
-            )
+                confidence = float(
+                    box.conf[0].item()
+                )
 
-            coordinates = (
-                boxes.xyxy[i]
-                .cpu()
-                .numpy()
-                .tolist()
-            )
+                coordinates = (
+                    box.xyxy[0]
+                    .cpu()
+                    .numpy()
+                    .tolist()
+                )
 
-            x1, y1, x2, y2 = [
-                int(round(x))
-                for x in coordinates
-            ]
-
-            class_name = get_class_name(
-                model,
-                class_id
-            )
-
-            detections.append({
-
-                "class_id": class_id,
-
-                "class_name": class_name,
-
-                "confidence": round(
-                    confidence_value,
-                    4
-                ),
-
-                "bbox": [
-                    x1,
-                    y1,
-                    x2,
-                    y2
+                x1, y1, x2, y2 = [
+                    int(round(x))
+                    for x in coordinates
                 ]
-            })
 
-        except Exception as error:
+                class_name = get_class_name(
+                    model,
+                    class_id
+                )
 
-            logger.warning(
-                "Detection parsing error: %s",
-                error
-            )
+                detections.append({
+
+                    "class_id": class_id,
+
+                    "class_name": class_name,
+
+                    "confidence": round(
+                        confidence,
+                        4
+                    ),
+
+                    "bbox": [
+                        x1,
+                        y1,
+                        x2,
+                        y2
+                    ]
+
+                })
+
+            except Exception as error:
+
+                logger.warning(
+                    "Could not parse detection: %s",
+                    error
+                )
+
+    except Exception as error:
+
+        logger.exception(
+            "YOLO inference failed: %s",
+            error
+        )
+
+        raise
 
     return detections
 
 
 # ============================================================
-# DRAW BOXES
+# DRAW DETECTIONS
 # ============================================================
 
-def draw_boxes(image, detections):
+def draw_detections(
+    image,
+    detections
+):
 
     output = image.copy()
 
     for detection in detections:
 
-        x1, y1, x2, y2 = detection["bbox"]
+        x1, y1, x2, y2 = (
+            detection["bbox"]
+        )
 
-        name = detection["class_name"]
+        class_name = (
+            detection["class_name"]
+        )
 
-        confidence = detection["confidence"]
+        confidence = (
+            detection["confidence"]
+        )
 
         label = (
-            f"{name} "
+            f"{class_name} "
             f"{confidence:.2f}"
         )
 
@@ -298,7 +341,7 @@ def draw_boxes(image, detections):
             label,
             (x1, max(y1 - 8, 20)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
+            0.5,
             (0, 255, 0),
             2,
             cv2.LINE_AA
@@ -308,17 +351,17 @@ def draw_boxes(image, detections):
 
 
 # ============================================================
-# IMAGE TO BASE64
+# IMAGE → BASE64
 # ============================================================
 
-def image_to_base64(image):
+def image_to_data_url(image):
 
-    success, buffer = cv2.imencode(
+    success, encoded = cv2.imencode(
         ".jpg",
         image,
         [
             cv2.IMWRITE_JPEG_QUALITY,
-            85
+            80
         ]
     )
 
@@ -326,134 +369,142 @@ def image_to_base64(image):
 
         return None
 
-    encoded = base64.b64encode(
-        buffer.tobytes()
+    encoded_data = base64.b64encode(
+        encoded.tobytes()
     ).decode("utf-8")
 
     return (
         "data:image/jpeg;base64,"
-        + encoded
+        + encoded_data
     )
 
 
 # ============================================================
-# GET UPLOADED IMAGE
+# GET IMAGE FROM REQUEST
 # ============================================================
 
-def get_uploaded_image():
+def get_request_image():
 
     # --------------------------------------------------------
-    # METHOD 1: NORMAL MULTIPART FILE
+    # MULTIPART FILE
     # --------------------------------------------------------
 
     if request.files:
 
         logger.info(
-            "FILES RECEIVED: %s",
+            "Received file fields: %s",
             list(request.files.keys())
         )
 
         for field_name in request.files:
 
-            uploaded = request.files[field_name]
+            uploaded_file = (
+                request.files[field_name]
+            )
 
-            if uploaded and uploaded.filename:
+            if (
+                uploaded_file
+                and uploaded_file.filename
+            ):
 
                 logger.info(
-                    "Using uploaded field: %s",
+                    "Using uploaded file field: %s",
                     field_name
                 )
 
-                data = uploaded.read()
+                data = (
+                    uploaded_file.read()
+                )
 
-                if data:
-
-                    array = np.frombuffer(
-                        data,
-                        dtype=np.uint8
-                    )
-
-                    image = cv2.imdecode(
-                        array,
-                        cv2.IMREAD_COLOR
-                    )
-
-                    if image is not None:
-
-                        return image
-
-
-    # --------------------------------------------------------
-    # METHOD 2: BASE64 JSON
-    # --------------------------------------------------------
-
-    try:
-
-        body = request.get_json(
-            silent=True
-        )
-
-        if body:
-
-            possible_keys = [
-                "image",
-                "file",
-                "photo",
-                "upload",
-                "image_data",
-                "base64",
-                "data"
-            ]
-
-            for key in possible_keys:
-
-                value = body.get(key)
-
-                if not value:
+                if not data:
 
                     continue
 
-                if isinstance(value, str):
+                array = np.frombuffer(
+                    data,
+                    dtype=np.uint8
+                )
 
-                    if "," in value:
+                image = cv2.imdecode(
+                    array,
+                    cv2.IMREAD_COLOR
+                )
 
-                        value = value.split(
-                            ",",
-                            1
-                        )[1]
+                if image is not None:
 
-                    try:
+                    return image
 
-                        data = base64.b64decode(
-                            value
-                        )
 
-                        array = np.frombuffer(
-                            data,
-                            dtype=np.uint8
-                        )
+    # --------------------------------------------------------
+    # BASE64 JSON
+    # --------------------------------------------------------
 
-                        image = cv2.imdecode(
-                            array,
-                            cv2.IMREAD_COLOR
-                        )
+    body = request.get_json(
+        silent=True
+    )
 
-                        if image is not None:
+    if body:
 
-                            logger.info(
-                                "Base64 image received from: %s",
-                                key
-                            )
+        possible_keys = [
+            "image",
+            "file",
+            "photo",
+            "upload",
+            "image_data",
+            "base64",
+            "data"
+        ]
 
-                            return image
+        for key in possible_keys:
 
-                    except Exception:
+            value = body.get(key)
 
-                        continue
+            if not value:
 
-    except Exception:
+                continue
 
-        pass
+            if not isinstance(
+                value,
+                str
+            ):
+
+                continue
+
+            try:
+
+                if "," in value:
+
+                    value = value.split(
+                        ",",
+                        1
+                    )[1]
+
+                decoded = base64.b64decode(
+                    value
+                )
+
+                array = np.frombuffer(
+                    decoded,
+                    dtype=np.uint8
+                )
+
+                image = cv2.imdecode(
+                    array,
+                    cv2.IMREAD_COLOR
+                )
+
+                if image is not None:
+
+                    logger.info(
+                        "Base64 image received: %s",
+                        key
+                    )
+
+                    return image
+
+            except Exception:
+
+                continue
 
 
     return None
@@ -495,11 +546,11 @@ def health():
             else None
         ),
 
+        "inference_size": 320,
+
         "ocr": False,
 
         "plate_model": False,
-
-        "inference_size": 416,
 
         "startup_warnings": []
 
@@ -517,26 +568,20 @@ def health():
 def analyze():
 
     logger.info("=" * 60)
-
-    logger.info(
-        "NEW ANALYSIS REQUEST"
-    )
-
+    logger.info("NEW ANALYSIS REQUEST")
     logger.info(
         "Content-Type: %s",
         request.content_type
     )
-
     logger.info(
-        "Request files: %s",
+        "File fields: %s",
         list(request.files.keys())
     )
-
     logger.info("=" * 60)
 
 
     # --------------------------------------------------------
-    # MODEL CHECK
+    # MAIN MODEL CHECK
     # --------------------------------------------------------
 
     if main_model is None:
@@ -548,24 +593,20 @@ def analyze():
             "status": "Analysis failed",
 
             "error": (
-                "Main model is not loaded on Render."
+                "Main YOLO model is not loaded."
             )
 
         }), 503
 
 
     # --------------------------------------------------------
-    # GET IMAGE
+    # READ IMAGE
     # --------------------------------------------------------
 
-    image = get_uploaded_image()
+    image = get_request_image()
 
 
     if image is None:
-
-        logger.error(
-            "NO IMAGE COULD BE READ FROM REQUEST"
-        )
 
         return jsonify({
 
@@ -577,21 +618,18 @@ def analyze():
                 "No readable image was uploaded."
             ),
 
-            "debug_files": list(
+            "received_fields": list(
                 request.files.keys()
             )
 
         }), 400
 
 
-    # --------------------------------------------------------
-    # IMAGE INFORMATION
-    # --------------------------------------------------------
-
     height, width = image.shape[:2]
 
+
     logger.info(
-        "IMAGE RECEIVED: %sx%s",
+        "Image received: %sx%s",
         width,
         height
     )
@@ -602,10 +640,10 @@ def analyze():
     # --------------------------------------------------------
 
     logger.info(
-        "Running main YOLO model..."
+        "Running main model..."
     )
 
-    main_detections = detect(
+    main_detections = run_detection(
         main_model,
         image
     )
@@ -627,10 +665,10 @@ def analyze():
     if helmet_model is not None:
 
         logger.info(
-            "Running helmet YOLO model..."
+            "Running helmet model..."
         )
 
-        helmet_detections = detect(
+        helmet_detections = run_detection(
             helmet_model,
             image
         )
@@ -655,7 +693,7 @@ def analyze():
     # DRAW
     # --------------------------------------------------------
 
-    annotated = draw_boxes(
+    annotated_image = draw_detections(
         image,
         all_detections
     )
@@ -681,19 +719,13 @@ def analyze():
             / len(confidence_values)
         )
 
-        highest_confidence = max(
-            confidence_values
-        )
-
     else:
 
         overall_confidence = 0.0
 
-        highest_confidence = 0.0
-
 
     # --------------------------------------------------------
-    # VIOLATIONS
+    # BASIC VIOLATION CHECK
     # --------------------------------------------------------
 
     violations = []
@@ -701,18 +733,19 @@ def analyze():
 
     for detection in helmet_detections:
 
-        name = (
+        class_name = (
             detection["class_name"]
             .lower()
             .replace("-", "_")
+            .replace(" ", "_")
         )
 
 
         if (
-            "no_helmet" in name
-            or "nohelmet" in name
-            or "without_helmet" in name
-            or "withouthelmet" in name
+            "no_helmet" in class_name
+            or "nohelmet" in class_name
+            or "without_helmet" in class_name
+            or "withouthelmet" in class_name
         ):
 
             violations.append({
@@ -729,34 +762,34 @@ def analyze():
 
 
     # --------------------------------------------------------
-    # VIOLATION TYPE
+    # STATUS
     # --------------------------------------------------------
 
     if violations:
-
-        violation_type = (
-            violations[0]["type"]
-        )
 
         analysis_status = (
             "Violation Detected"
         )
 
-    elif all_detections:
+        violation_type = (
+            violations[0]["type"]
+        )
 
-        violation_type = "-"
+    elif all_detections:
 
         analysis_status = (
             "Analysis Complete"
         )
 
-    else:
-
         violation_type = "-"
+
+    else:
 
         analysis_status = (
             "No Detection"
         )
+
+        violation_type = "-"
 
 
     # --------------------------------------------------------
@@ -770,16 +803,15 @@ def analyze():
 
     for detection in main_detections:
 
-        name = (
+        class_name = (
             detection["class_name"]
             .lower()
         )
 
-
         if (
-            "plate" in name
-            or "license" in name
-            or "number_plate" in name
+            "plate" in class_name
+            or "license" in class_name
+            or "number_plate" in class_name
         ):
 
             number_plate = (
@@ -794,11 +826,11 @@ def analyze():
 
 
     # --------------------------------------------------------
-    # RESULT IMAGE
+    # ENCODE RESULT
     # --------------------------------------------------------
 
-    result_image = image_to_base64(
-        annotated
+    result_image = image_to_data_url(
+        annotated_image
     )
 
 
@@ -821,7 +853,7 @@ def analyze():
     # RESPONSE
     # --------------------------------------------------------
 
-    response = {
+    return jsonify({
 
         "success": True,
 
@@ -834,18 +866,19 @@ def analyze():
             4
         ),
 
-        "highest_confidence": round(
-            highest_confidence,
-            4
+        "violation_type": (
+            violation_type
         ),
 
-        "violation_type": violation_type,
-
-        "number_plate": number_plate,
+        "number_plate": (
+            number_plate
+        ),
 
         "ocr_confidence": None,
 
-        "plate_confidence": plate_confidence,
+        "plate_confidence": (
+            plate_confidence
+        ),
 
         "detected_violations": len(
             violations
@@ -855,41 +888,35 @@ def analyze():
 
         "detections": all_detections,
 
-        "main_detections": main_detections,
+        "main_detections": (
+            main_detections
+        ),
 
-        "helmet_detections": helmet_detections,
+        "helmet_detections": (
+            helmet_detections
+        ),
 
-        "annotated_image": result_image,
+        "annotated_image": (
+            result_image
+        ),
 
-        "result_image": result_image,
+        "result_image": (
+            result_image
+        ),
 
-        "image": result_image,
+        "image": (
+            result_image
+        ),
 
-        "image_url": result_image,
+        "image_url": (
+            result_image
+        ),
 
         "width": width,
 
         "height": height
 
-    }
-
-
-    logger.info(
-        "ANALYSIS COMPLETED SUCCESSFULLY"
-    )
-
-    logger.info(
-        "Violations: %d",
-        len(violations)
-    )
-
-    logger.info(
-        "Total detections: %d",
-        len(all_detections)
-    )
-
-
-    return jsonify(response)
+    })
 
 
 # ============================================================
@@ -899,36 +926,30 @@ def analyze():
 @app.route("/", methods=["GET"])
 def home():
 
-    index_path = BASE_DIR / "index.html"
+    index_file = (
+        BASE_DIR / "index.html"
+    )
 
-    if index_path.exists():
+    if index_file.exists():
 
         return send_from_directory(
             BASE_DIR,
             "index.html"
         )
 
-    return jsonify({
-
-        "service": "TrafficGuard AI",
-
-        "status": "online",
-
-        "message": "index.html not found",
-
-        "health": "/api/health",
-
-        "analyze": "/api/analyze"
-
-    })
+    return """
+    <h1>TrafficGuard AI</h1>
+    <p>Service is online.</p>
+    <p>index.html is missing.</p>
+    """
 
 
 # ============================================================
-# ERROR HANDLERS
+# UPLOAD ERROR
 # ============================================================
 
 @app.errorhandler(413)
-def too_large(error):
+def upload_too_large(error):
 
     return jsonify({
 
@@ -938,28 +959,10 @@ def too_large(error):
 
         "error": (
             "Image is too large. "
-            "Maximum size is 15 MB."
+            "Maximum allowed size is 10 MB."
         )
 
     }), 413
-
-
-@app.errorhandler(Exception)
-def server_error(error):
-
-    logger.exception(
-        "UNHANDLED SERVER ERROR"
-    )
-
-    return jsonify({
-
-        "success": False,
-
-        "status": "Analysis failed",
-
-        "error": str(error)
-
-    }), 500
 
 
 # ============================================================
